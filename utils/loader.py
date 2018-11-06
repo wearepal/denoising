@@ -20,8 +20,8 @@ class HuaweiDataset(Dataset):
                 os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
                 "data"
             )
-            if not os.path.isdir(self.root_dir):
-                raise ValueError("No valid top directory specified")
+        if not os.path.isdir(self.root_dir):
+            raise ValueError("No valid top directory specified")
         self.info_df = pd.read_csv(os.path.join(self.root_dir, "Training_Info.csv"))
 
     def __len__(self):
