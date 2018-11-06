@@ -1,13 +1,17 @@
+"""Utilities for loading the dataset"""
 from pathlib import Path
 import pandas as pd
 from skimage import io
 from torch.utils.data import Dataset
 
+
 class HuaweiDataset(Dataset):
+    """Class for loading the Huawei dataset"""
     def __init__(self, root_dir=None, transform=None):
         """
         Args:
-            root_dir (string, optional): Directory with all the image folders, and 'Training_Info.csv'.
+            root_dir (string, optional): Directory with all the image folders,
+                                         and 'Training_Info.csv'.
             transform (callable, optional): Optional transform to be applied on a sample.
         """
         self.transform = transform
@@ -15,10 +19,10 @@ class HuaweiDataset(Dataset):
             self.root_dir = Path(root_dir).resolve()
         else:
             # Use the default path, assumes repo was cloned alongside a `data` folder
-            self.root_dir = Path(__file__).resolve().parent.parent.parent/"data"
+            self.root_dir = Path(__file__).resolve().parent.parent.parent / "data"
         if not self.root_dir.is_dir():
             raise ValueError("No valid top directory specified")
-        self.info_df = pd.read_csv(self.root_dir/"Training_Info.csv")
+        self.info_df = pd.read_csv(self.root_dir / "Training_Info.csv")
 
     def __len__(self):
         return len(self.info_df)
@@ -29,18 +33,18 @@ class HuaweiDataset(Dataset):
         clean_location, noisy_location = self._get_image_locations(idx)
         clean_image = io.imread(clean_location)
         noisy_image = io.imread(noisy_location)
-        ISO = self.info_df.iloc[idx]['ISO_Info']
+        iso = self.info_df.iloc[idx]['ISO_Info']
         sample = {
             'clean': clean_image,
             'noisy': noisy_image,
-            'iso': ISO,
+            'iso': iso,
         }
 
         if self.transform is not None:
             sample = self.transform(sample)
 
         return sample
-    
+
     def _get_image_locations(self, idx):
         class_info = self.info_df.iloc[idx]['Class_Info']
         # Class_Info in the csv doesn't match the directory names, so they need fixing:
@@ -49,6 +53,6 @@ class HuaweiDataset(Dataset):
         else:
             class_dir = class_info.capitalize()
         file_name = self.info_df.iloc[idx]['Name_Info'].capitalize()
-        clean_location = self.root_dir/class_dir/"Clean"/file_name
-        noisy_location = self.root_dir/class_dir/"Noisy"/file_name
+        clean_location = self.root_dir / class_dir / "Clean" / file_name
+        noisy_location = self.root_dir / class_dir / "Noisy" / file_name
         return clean_location, noisy_location
