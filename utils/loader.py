@@ -1,9 +1,7 @@
 import os
-import torch
 import pandas as pd
 from skimage import io
-from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms, utils
+from torch.utils.data import Dataset
 
 class HuaweiDataset(Dataset):
     def __init__(self, root_dir=None, transform=None):
