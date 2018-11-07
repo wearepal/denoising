@@ -9,8 +9,8 @@ def test_load():
     data = HuaweiDataset(root_dir="{}/tests/test_data".format(ROOT_DIR))
     images = next(iter(data))
 
-    clean_image = io.imread("{}/tests/test_data/Category/Clean/Test_Image.png".format(ROOT_DIR))
-    noisy_image = io.imread("{}/tests/test_data/Category/Noisy/Test_Image.png".format(ROOT_DIR))
+    clean_image = io.imread("{}/tests/test_data/Category/Clean/Test_image.png".format(ROOT_DIR))
+    noisy_image = io.imread("{}/tests/test_data/Category/Noisy/Test_image.png".format(ROOT_DIR))
 
     np.testing.assert_equal(images['clean'], clean_image)
     np.testing.assert_equal(images['noisy'], noisy_image)
