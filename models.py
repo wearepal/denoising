@@ -8,8 +8,8 @@ import torch.nn as nn
 
 class BasicGenerator(nn.Module):
     """
-    Simple generator network with a uniform number of filters in each hidden
-    layer.
+    Simple generator network with a uniform number of filters
+    throughout the hidden layers.
     """
     def __init__(self, in_channels=3, hidden_channels=32, num_hidden_layers=7):
         super().__init__()
