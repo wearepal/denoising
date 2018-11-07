@@ -3,7 +3,7 @@ from pathlib import Path
 from torch.utils.data import DataLoader
 from typing import Tuple
 import pandas as pd
-from utils.loader import HuaweiDataset
+from utils.inplace_dataset import InplaceHuaweiDataset
 
 
 def create_datasets(root_d: str,
@@ -28,11 +28,11 @@ def create_datasets(root_d: str,
     train_indices = train_indices[:max_train_samples]
     test_indices = indices[int(round(size*train_ratio)):]
 
-    train_dataset = HuaweiDataset(root_dir=root_dir, indices=train_indices,
+    train_dataset = InplaceHuaweiDataset(root_dir=root_dir, indices=train_indices,
                                   max_idx=len(train_indices), num_crops=crops_per_image,
                                   crop_height=crop_height, crop_width=crop_width,
                                   padding=pad)
-    test_dataset = HuaweiDataset(root_dir=root_dir, indices=test_indices,
+    test_dataset = InplaceHuaweiDataset(root_dir=root_dir, indices=test_indices,
                                  max_idx=len(test_indices), num_crops=crops_per_image,
                                  crop_height=crop_height, crop_width=crop_width,
                                  padding=pad)
