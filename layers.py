@@ -17,7 +17,7 @@ class Identity(nn.Module):
 
 class GatedConv2d(nn.Module):
 
-    def __init__(self, input_channels, output_channels, kernel_size=3, stride=1, padding=1, dilation=1,
+    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, dilation=1,
                  activation=None, local_condition=False, condition_channels=1):
         super().__init__()
 
@@ -27,16 +27,16 @@ class GatedConv2d(nn.Module):
         self.local_condition = local_condition
 
         if not local_condition:
-            self.conv_features = nn.Conv2d(input_channels, output_channels, kernel_size, stride, padding, dilation)
-            self.conv_gate = nn.Conv2d(input_channels, output_channels, kernel_size, stride, padding, dilation)
+            self.conv_features = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, dilation)
+            self.conv_gate = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, dilation)
         else:
             # Because the conditioning data needs to be incorporated into the bias, bias is set to false
-            self.conv_features = nn.Conv2d(input_channels, output_channels, kernel_size, stride,
+            self.conv_features = nn.Conv2d(in_channels, out_channels, kernel_size, stride,
                                            padding, dilation, bias=False)
-            self.conv_gate = nn.Conv2d(input_channels, output_channels, kernel_size, stride,
+            self.conv_gate = nn.Conv2d(in_channels, out_channels, kernel_size, stride,
                                        padding, dilation, bias=False)
-            self.cond_features = nn.Conv1d(condition_channels, output_channels, kernel_size=1, bias=False)
-            self.cond_gate = nn.Conv1d(condition_channels, output_channels, kernel_size=1, bias=False)
+            self.cond_features = nn.Conv1d(condition_channels, out_channels, kernel_size=1, bias=False)
+            self.cond_gate = nn.Conv1d(condition_channels, out_channels, kernel_size=1, bias=False)
 
     def forward(self, x, c=None):
         """
@@ -52,19 +52,23 @@ class GatedConv2d(nn.Module):
         """
         features = self.conv_features(x)
         gate = self.conv_gate(x)
+
         if self.local_condition:
             # features += self.cond_features(c)
             features += self.cond_features(c)[..., None].expand_as(features)
             gate += self.cond_gate(c)[..., None].expand_as(gate)
+
         if self.activation is not None:
             features = self.activation(features)
+
         gate = self.sigmoid(gate)
+
         return features * gate
 
 
 class GatedConvTranspose2d(nn.Module):
 
-    def __init__(self, input_channels, output_channels, kernel_size, stride, padding, output_padding=0, dilation=(1, 1),
+    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, output_padding=0, dilation=1,
                  activation=None, local_condition=False, condition_channels=1):
         super().__init__()
 
@@ -74,18 +78,18 @@ class GatedConvTranspose2d(nn.Module):
         self.local_condition = local_condition
 
         if not local_condition:
-            self.conv_features = nn.ConvTranspose2d(input_channels, output_channels, kernel_size, stride,
+            self.conv_features = nn.ConvTranspose2d(in_channels, out_channels, kernel_size, stride,
                                                     padding, output_padding, dilation=dilation)
-            self.conv_gate = nn.ConvTranspose2d(input_channels, output_channels, kernel_size, stride,
+            self.conv_gate = nn.ConvTranspose2d(in_channels, out_channels, kernel_size, stride,
                                                 padding, output_padding, dilation=dilation)
         else:
             # Because the conditioning data is incorporated into the bias, bias is set to false
-            self.conv_features = nn.ConvTranspose2d(input_channels, output_channels, kernel_size, stride,
+            self.conv_features = nn.ConvTranspose2d(in_channels, out_channels, kernel_size, stride,
                                                     padding, output_padding, dilation=dilation, bias=False)
-            self.conv_gate = nn.ConvTranspose2d(input_channels, output_channels, kernel_size, stride,
+            self.conv_gate = nn.ConvTranspose2d(in_channels, out_channels, kernel_size, stride,
                                                 padding, output_padding, dilation=dilation, bias=False)
-            self.cond_features = nn.Conv1d(condition_channels, output_channels, kernel_size=1, bias=False)
-            self.cond_gate = nn.Conv1d(condition_channels, output_channels, kernel_size=1, bias=False)
+            self.cond_features = nn.Conv1d(condition_channels, out_channels, kernel_size=1, bias=False)
+            self.cond_gate = nn.Conv1d(condition_channels, out_channels, kernel_size=1, bias=False)
 
     def forward(self, x, c=None):
         """
@@ -101,37 +105,42 @@ class GatedConvTranspose2d(nn.Module):
         """
         features = self.conv_features(x)
         gate = self.conv_gate(x)
+        
         if self.local_condition:
             features += self.cond_features(c)[..., None].expand_as(features)
             gate += self.cond_gate(c)[..., None].expand_as(gate)
+
         if self.activation is not None:
             features = self.activation(features)
+
         gate = self.sigmoid(gate)
+
         return features * gate
 
 
 class ResidualBLock(nn.Module):
 
-    def __init__(self, inplanes, planes, kernel_size=3, stride=1, padding=1, dilation=(1, 1), residual=True):
+    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1,
+                 dilation=(1, 1), residual=True):
         super().__init__()
 
         conv1_padding = padding * dilation[0]    # ensure the dilation does not affect the output size
-        self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=kernel_size,
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size,
                                stride=stride, padding=conv1_padding, dilation=dilation[0])
-        self.bn1 = nn.BatchNorm2d(planes)
+        self.bn1 = nn.BatchNorm2d(out_channels)
 
         conv2_padding = padding * dilation[1]
-        self.conv2 = nn.Conv2d(planes, planes, kernel_size=kernel_size,
+        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=kernel_size,
                                stride=stride, padding=conv2_padding, dilation=dilation[1])
-        self.bn2 = nn.BatchNorm2d(planes)
+        self.bn2 = nn.BatchNorm2d(out_channels)
 
         self.relu = nn.ReLU()
 
         self.downsample = None
-        if stride != 1 or inplanes != planes:
+        if stride != 1 or in_channels != out_channels:
             self.downsample = nn.Sequential(
-                nn.Conv2d(inplanes, planes, stride),
-                nn.BatchNorm2d(planes)
+                nn.Conv2d(in_channels, out_channels, stride),
+                nn.BatchNorm2d(out_channels)
             )
 
         self.stride = stride
@@ -159,31 +168,32 @@ class ResidualBLock(nn.Module):
 
 class GatedResidualBLock(nn.Module):
 
-    def __init__(self, inplanes, planes, kernel_size=3, stride=1, padding=1, dilation=(1, 1),
-                 residual=True, activation=None, local_condition=False, condition_channels=1):
+    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1,
+                 dilation=(1, 1), residual=True, activation=None, local_condition=False,
+                 condition_channels=1):
         super().__init__()
 
         conv1_padding = padding * dilation[0]    # ensure the dilation does not affect the output size
-        self.conv1 = GatedConv2d(inplanes, planes, kernel_size=kernel_size,
+        self.conv1 = GatedConv2d(in_channels, out_channels, kernel_size=kernel_size,
                                  stride=stride, padding=conv1_padding, dilation=dilation[0],
                                  activation=activation, local_condition=local_condition,
                                  condition_channels=condition_channels)
 
-        self.bn1 = nn.BatchNorm2d(planes)
+        self.bn1 = nn.BatchNorm2d(out_channels)
 
         conv2_padding = padding * dilation[1]
-        self.conv2 = GatedConv2d(planes, planes, kernel_size=kernel_size,
+        self.conv2 = GatedConv2d(out_channels, out_channels, kernel_size=kernel_size,
                                  stride=stride, padding=conv2_padding, dilation=dilation[1],
                                  activation=activation, local_condition=local_condition,
                                  condition_channels=condition_channels)
-        self.bn2 = nn.BatchNorm2d(planes)
+        self.bn2 = nn.BatchNorm2d(out_channels)
         self.relu = nn.ReLU()
 
         self.downsample = None
-        if stride != 1 or inplanes != planes:
+        if stride != 1 or in_channels != out_channels:
             self.downsample = nn.Sequential(
-                nn.Conv2d(inplanes, planes, stride),
-                nn.BatchNorm2d(planes)
+                nn.Conv2d(in_channels, out_channels, stride),
+                nn.BatchNorm2d(out_channels)
             )
 
         self.stride = stride
@@ -223,4 +233,5 @@ class ConditionalBatchNorm2d(nn.Module):
         out = self.bn(x)
         gamma, beta = self.embed(y).chunk(2, 1)
         out = gamma.view(-1, self.num_features, 1, 1) * out + beta.view(-1, self.num_features, 1, 1)
+
         return out
