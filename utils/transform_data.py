@@ -1,7 +1,6 @@
 from loader import HuaweiDataset
 from pathlib import Path
 import csv
-from sys import argv
 from random import seed
 from torchvision import transforms
 
@@ -41,4 +40,5 @@ def main(patches, patch_size, new_path=None):
 
 
 if __name__ == "__main__":
-    main(1000, 64)
+    from sys import argv
+    main(int(argv[1]), int(argv[2]))
