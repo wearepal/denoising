@@ -105,7 +105,7 @@ class GatedConvTranspose2d(nn.Module):
         """
         features = self.conv_features(x)
         gate = self.conv_gate(x)
-        
+
         if self.local_condition:
             features += self.cond_features(c)[..., None].expand_as(features)
             gate += self.cond_gate(c)[..., None].expand_as(gate)
@@ -187,6 +187,7 @@ class GatedResidualBLock(nn.Module):
                                  activation=activation, local_condition=local_condition,
                                  condition_channels=condition_channels)
         self.bn2 = nn.BatchNorm2d(out_channels)
+        
         self.relu = nn.ReLU()
 
         self.downsample = None
