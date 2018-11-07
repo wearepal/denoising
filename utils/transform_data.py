@@ -9,7 +9,7 @@ def main(patches, patch_size, new_path=None):
     transform = transforms.Compose([rand_crop])
 
     if new_path is not None:
-        root_path = Path(root_dir).resolve()
+        root_path = Path(new_path).resolve()
     else:
         # Use the default path, assumes repo was cloned alongside a `data` folder
         root_path = Path(__file__).resolve().parent.parent.parent / "data"
@@ -17,7 +17,7 @@ def main(patches, patch_size, new_path=None):
         raise ValueError("No valid top directory specified")
     transformed_path = root_path / "transformed"
     transformed_path.mkdir()
-    data = HuaweiDataset()
+    data = HuaweiDataset(root_dir=root_path)
     iso_data = [("folder_idx", "iso")]
     for image_no, pair in enumerate(data):
         iso_data.append((image_no, pair['iso']))
@@ -40,5 +40,10 @@ def main(patches, patch_size, new_path=None):
 
 
 if __name__ == "__main__":
-    from sys import argv
-    main(int(argv[1]), int(argv[2]))
+    import argparse
+    parser = argparse.ArgumentParser(description="Generate transformed images")
+    parser.add_argument("crops", metavar="c", type=int, help="Number of random crops per image")
+    parser.add_argument("size", metavar="s", type=int, help="Dimension of cropped image")
+    parser.add_argument("--data-path", dest="path", default=None, help="Data folder path") 
+    args = parser.parse_args()
+    main(args.crops, args.size, new_path=args.path)
