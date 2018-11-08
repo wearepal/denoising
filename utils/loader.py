@@ -55,8 +55,9 @@ class TransformedHuaweiDataset(Dataset):
         noisy_location = self.root_dir / str(original_index) / "noisy" / f"{patch_index}.png"
         return clean_location, noisy_location
     
-    def random_split(self, test_ratio=0.5, seed=1):
-        np.random.seed(seed)
+    def random_split(self, test_ratio=0.5, seed=None):
+        if seed is not None:
+            np.random.seed(seed)
         n_test_images = int(self.n_originals * test_ratio)
         test_original_idx = np.random.choice(np.arange(self.n_originals), n_test_images, replace=False)
         train_original_idx = np.setdiff1d(np.arange(self.n_originals), test_original_idx)
