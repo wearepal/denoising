@@ -5,21 +5,6 @@ from PIL import Image
 from torch.utils.data import Dataset, Subset
 import numpy as np
 
-def random_split(dataset, lengths):
-    """
-    Randomly split a dataset into non-overlapping new datasets of given lengths.
-    Modified version of torch.utils.data.random_split
-
-    Arguments:
-        dataset (Dataset): Dataset to be split
-        lengths (sequence): lengths of splits to be produced
-    """
-    if sum(lengths) != len(dataset):
-        raise ValueError("Sum of input lengths does not equal the length of the input dataset!")
-
-    indices = randperm(sum(lengths))
-    return [Subset(dataset, indices[offset - length:offset]) for offset, length in zip(_accumulate(lengths), lengths)]
-
 class TransformedHuaweiDataset(Dataset):
     """Class for loading the transformed Huawei dataset"""
     def __init__(self, split=None, root_dir=None, transform=None):
