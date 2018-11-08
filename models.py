@@ -27,7 +27,7 @@ class BasicGenerator(nn.Module):
         layers.append(nn.Sequential(
             nn.Conv2d(in_channels=hidden_channels, out_channels=in_channels, kernel_size=3,
                       stride=1, padding=1),
-            nn.ReLU()
+            nn.Tanh()
         ))
 
         self.model = nn.Sequential(*layers)
