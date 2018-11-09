@@ -2,7 +2,7 @@ import numpy as np
 from skimage import io
 
 from common import ROOT_DIR
-from utils.loader import HuaweiDataset
+from utils import HuaweiDataset
 
 
 def test_load():
