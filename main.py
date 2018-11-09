@@ -1,7 +1,8 @@
 import argparse
-import os
+from pathlib import Path
 import random
 import shutil
+import time
 
 import numpy as np
 import torch
@@ -28,8 +29,8 @@ parser.add_argument('-nc', '--no_cuda', action='store_true', default=False,
 
 parser.add_argument('--manual_seed', type=int, help='manual seed, if not given resorts to random seed.')
 
-parser.add_argument('-sd', '--save_dir', type=str, metavar='PATH', default='results/save_dir',
-                    help='path to save results and checkpoints to (default: results/save_dir)')
+parser.add_argument('-sd', '--save_dir', type=str, metavar='PATH', default='',
+                    help='path to save results and checkpoints to (default: results/<model>/<current timestamp>)')
 
 parser.add_argument('--epochs', default=100, type=int, metavar='N',
                     help='number of total epochs to run')
@@ -76,43 +77,51 @@ if args.cuda:
 
 kwargs = {'num_workers': 0, 'pin_memory': True} if args.cuda else {'num_workers': args.workers}
 
+# Define transforms:
+noisy_transforms = transforms.Compose(
+    [transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ])
+
+clean_transforms = transforms.Compose(
+    [transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ])
+
+def transform_sample(sample):
+    transformed_sample = {
+        'clean': clean_transforms(sample['clean']),
+        'noisy': noisy_transforms(sample['noisy']),
+        'iso': sample['iso']
+    }
+
 
 def main(args, kwargs):
     print('\nMODEL SETTINGS: \n', args, '\n')
     print("Random Seed: ", args.manual_seed)
 
+    # Create results path
+    if args.save_dir: # If specified
+        save_path = Path(save_dir).resolve()
+    else:
+        save_path = Path("").resolve() / "results" / args.model / str(round(time.time())))
+    save_path.mkdir() # Will throw an exception if the path exists OR the parent path _doesn't_
+
     # Save config
-    torch.save(args, args.save_dir + 'denoising' + '.config')
-    writer = SummaryWriter(os.path.join(args.savedir, 'Summaries'))
+    torch.save(args, save_path / 'denoising.config')
+    writer = SummaryWriter(Path(args.savedir).resolve() / 'Summaries')
 
     # construct network from args
     model = getattr(models, args.model)(args)
     optimizer = getattr(torch.optim, args.optim)(model.parameters(), lr=args.lr)
     criterion = getattr(loss, args.loss)()
 
-    if args.cuda:
-        print("Model on GPU")
-        model.cuda()
-        criterion.cuda()
-
-    # TODO: Set root-dir for dataset
-    noisy_transforms = transforms.Compose(
-        [transforms.ToTensor(),
-         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-         ])
-
-    clean_transforms = transforms.Compose(
-        [transforms.ToTensor(),
-         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-         ])
-
-    dataset = TransformedHuaweiDataset(root_dir=args.data_dir)
-
+    dataset = TransformedHuaweiDataset(root_dir=args.data_dir, transform=transform_sample)
     train_dataset, val_dataset = dataset.random_split(test_ratio=args.test_split)
+
     train_loader = DataLoader(train_dataset, batch_size=args.train_batch_size,
                               shuffle=True, **kwargs)
 
-    val_dataset = HuaweiDataset(root_dir='')
     val_loader = DataLoader(val_dataset, batch_size=args.test_batch_size,
                             shuffle=False, **kwargs)
 
@@ -160,8 +169,8 @@ def main(args, kwargs):
 
 def save_checkpoint(checkpoint, filename, is_best):
     print("===> Saving checkpoint '{}'".format(filename))
-    model_filename = os.path.join(args.save_dir, filename)
-    best_filename = os.path.join(args.save_dir, 'model_best.pth.tar')
+    model_filename = save_path / filename
+    best_filename = save_path / 'model_best.pth.tar'
     torch.save(checkpoint, model_filename)
     if is_best:
         shutil.copyfile(model_filename, best_filename)
