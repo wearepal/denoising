@@ -3,7 +3,7 @@ from skimage import io, measure, color
 import torch
 
 from common import ROOT_DIR
-from utils.loss_functions import *
+from utils.loss_functions import SSIM, PSNR
 
 RTOL = 1e-7
 
