@@ -148,11 +148,11 @@ def main(args, kwargs):
 
         # Train
         print("===> Training on Epoch %d" % epoch)
-        train(train_loader, model, criterion, optimizer, epoch)
+        train(args, train_loader, model, criterion, optimizer, epoch, writer)
 
         # Validate
         print("===> Validating on Epoch %d" % epoch)
-        val_loss = validate(val_loader, model, criterion, training_iters)
+        val_loss = validate(args, val_loader, model, criterion, training_iters, writer)
 
         is_best = val_loss < best_loss
         best_loss = min(val_loss, best_loss)
