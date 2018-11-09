@@ -25,7 +25,7 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
             noisy = noisy.cuda() if args.cuda else noisy
             clean = clean.cuda() if args.cuda else clean
             # ISO needs to be a 3d tensor to be passed to Gated Convolutions
-            iso = torch.FloatTensor(iso).view(noisy.size(0), -1, 1)
+            iso = torch.FloatTensor(float(iso)).view(noisy.size(0), -1, 1)
             iso = iso.cuda() if args.cuda else iso
 
             # Clear past gradients
