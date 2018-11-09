@@ -15,6 +15,10 @@ from models import BasicGenerator
 
 parser = argparse.ArgumentParser()
 
+parser.add_argument('-d', '--data_dir', help='location of transformed data')
+parser.add_argument('-ts', '--test_split', help='Fraction of data to be used for validation',
+                    default=0.2, type=float)
+
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
 
@@ -95,7 +99,9 @@ def main(args, kwargs):
          transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
          ])
 
-    train_dataset = HuaweiDataset(root_dir='')
+    dataset = TransformedHuaweiDataset(root_dir=args.data_dir)
+
+    train_dataset, val_dataset = dataset.random_split(test_ratio=args.test_split)
     train_loader = DataLoader(train_dataset, batch_size=args.train_batch_size,
                               shuffle=True, **kwargs)
 
