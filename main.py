@@ -102,7 +102,7 @@ def main(args, kwargs):
 
     # Create results path
     if args.save_dir: # If specified
-        save_path = Path(save_dir).resolve()
+        save_path = Path(args.save_dir).resolve()
     else:
         save_path = Path("").resolve() / "results" / args.model / str(round(time.time()))
     save_path.mkdir() # Will throw an exception if the path exists OR the parent path _doesn't_
