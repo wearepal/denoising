@@ -17,7 +17,7 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
     # Start progress bar. Maximum value = number of batches.
     with tqdm(total=steps) as pbar:
         # Iterate through the training batch samples
-        for i, (noisy, clean, iso) in enumerate(train_loader):
+        for i, sample in enumerate(train_loader):
             # Send inputs to correct device
             noisy = noisy.cuda() if args.cuda else noisy
             clean = clean.cuda() if args.cuda else clean
@@ -80,7 +80,7 @@ def validate(args, val_loader, model, criterion, training_iters, summary_writer)
         # Start progress bar. Maximum value = number of batches.
         with tqdm(total=steps) as pbar:
             # Iterate through the validation batch samples
-            for i, (noisy, clean, iso) in enumerate(val_loader):
+            for i, sample in enumerate(val_loader):
                 # Send inputs to correct device
                 noisy = noisy.cuda() if args.cuda else noisy
                 clean = clean.cuda() if args.cuda else clean
