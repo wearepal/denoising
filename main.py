@@ -8,11 +8,10 @@ import torch
 from tensorboardX import SummaryWriter
 from torchvision import transforms
 
-from training import train, validate
+from optimisation.training import train, validate
 from utils import TransformedHuaweiDataset
 from torch.utils.data import DataLoader
 from models import BasicGenerator
-import pdb; pdb.set_trace()
 
 parser = argparse.ArgumentParser()
 
