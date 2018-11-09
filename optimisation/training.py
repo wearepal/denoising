@@ -8,8 +8,9 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
     # Meters to log batch time and loss
     batch_time = AverageValueMeter()
     loss = AverageValueMeter()
-
+    
     # Switch to train mode
+    model = model.cuda() if args.cuda else model
     model.train()
 
     end = time.time()
@@ -25,7 +26,7 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
             noisy = noisy.cuda() if args.cuda else noisy
             clean = clean.cuda() if args.cuda else clean
             # ISO needs to be a 3d tensor to be passed to Gated Convolutions
-            iso = torch.FloatTensor(float(iso)).view(noisy.size(0), -1, 1)
+            iso = torch.FloatTensor(iso).view(noisy.size(0), -1, 1)
             iso = iso.cuda() if args.cuda else iso
 
             # Clear past gradients
@@ -45,16 +46,16 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
             end = time.time()
 
             # Update progress bar
-            pbar.set_postfix(loss=loss.value()[0])
+            pbar.set_postfix(loss=loss.item())
             pbar.update()
 
             # Write the results to tensorboard
             summary_writer.add_scalar('Train/Loss', loss, (epoch * steps) + i)
 
-    print("===> Average total loss: {:4f}".format(loss.value()[0]))
-    print("===> Average batch time: {:.4f}".format(batch_time.value()[0]))
+    print("===> Average total loss: {:4f}".format(loss.item()))
+    print("===> Average batch time: {:.4f}".format(batch_time.item()))
 
-    return loss.value()[0]
+    return loss.item()
 
 
 def validate(args, val_loader, model, criterion, training_iters, summary_writer):
@@ -91,7 +92,7 @@ def validate(args, val_loader, model, criterion, training_iters, summary_writer)
                 noisy = noisy.cuda() if args.cuda else noisy
                 clean = clean.cuda() if args.cuda else clean
                 # ISO needs to be a 3d tensor to be passed to Gated Convolutions
-                iso = torch.FloatTensor(iso.values).view(noisy.size(0), -1, 1)
+                iso = torch.FloatTensor(iso).view(noisy.size(0), -1, 1)
                 iso = iso.cuda() if args.cuda else iso
 
                 # Denoise the image and calculate the loss wrt target clean image
@@ -106,14 +107,14 @@ def validate(args, val_loader, model, criterion, training_iters, summary_writer)
                 end = time.time()
 
                 # Update progress bar
-                pbar.set_postfix(loss=loss.value()[0])
+                pbar.set_postfix(loss=loss.item())
                 pbar.update()
 
-    average_loss = loss.value()[0]
+    average_loss = loss.item()
     # Write average loss to tensorboard
     summary_writer.add_scalar('Test/Loss', average_loss, training_iters)
 
     print("===> Average total loss: {:4f}".format(average_loss))
-    print("===> Average batch time: {:.4f}".format(batch_time.value()[0]))
+    print("===> Average batch time: {:.4f}".format(batch_time.item()))
 
     return average_loss
