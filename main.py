@@ -102,7 +102,7 @@ def transform_sample(sample):
         'noisy': noisy_transforms(sample['noisy']),
         'iso': sample['iso']
     }
-    return transform_sample
+    return transformed_sample
 
 
 def main(args, kwargs):
