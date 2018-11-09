@@ -23,8 +23,7 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
             clean = clean.cuda() if args.cuda else clean
             # ISO needs to be a 3d tensor to be passed to Gated Convolutions
             iso = torch.FloatTensor(iso.values).view(noisy.size(0), -1, 1)
-            if args.cuda:
-                iso.cuda()
+            iso = iso.cuda() if args.cuda else iso
 
             # Clear past gradients
             optimizer.zero_grad()
@@ -87,8 +86,7 @@ def validate(args, val_loader, model, criterion, training_iters, summary_writer)
                 clean = clean.cuda() if args.cuda else clean
                 # ISO needs to be a 3d tensor to be passed to Gated Convolutions
                 iso = torch.FloatTensor(iso.values).view(noisy.size(0), -1, 1)
-                if args.cuda:
-                    iso.cuda()
+                iso = iso.cuda() if args.cuda else iso
 
                 # Denoise the image and calculate the loss wrt target clean image
                 denoised = model(noisy, iso)
