@@ -5,12 +5,13 @@ import shutil
 
 import numpy as np
 import torch
+from torch.utils.data import DataLoader
 from tensorboardX import SummaryWriter
 from torchvision import transforms
 
 from optimisation.training import train, validate
+from optimisation import loss
 from utils import TransformedHuaweiDataset
-from torch.utils.data import DataLoader
 import models
 
 parser = argparse.ArgumentParser()
@@ -38,7 +39,7 @@ parser.add_argument('-teb', '--test_batch-size', default=1, type=int,
 
 parser.add_argument('--lr', '--learning-rate', default=0.005, type=float,
                     metavar='LR', help='initial learning rate (default: 0.005)')
-parser.add_argument('--loss', type=str, default='MSE')
+parser.add_argument('--loss', type=str, default='MSELoss')
 parser.add_argument('--model', type=str, default='BasicGenerator')
 
 parser.add_argument('--resume', metavar='PATH', help='load from a path to a saved checkpoint')
@@ -78,7 +79,7 @@ def main(args, kwargs):
     # TODO: Load model
     model = getattr(models, args.model)()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
-    criterion = torch.nn.MSELoss()
+    criterion = getattr(loss, args.loss)()
 
     if args.cuda:
         print("Model on GPU")
