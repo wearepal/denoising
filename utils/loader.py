@@ -7,7 +7,7 @@ import numpy as np
 
 class TransformedHuaweiDataset(Dataset):
     """Class for loading the transformed Huawei dataset"""
-    def __init__(self, split=None, root_dir=None, transform=None):
+    def __init__(self, root_dir=None, transform=None):
         """
         Args:
             root_dir (string, optional): Directory with all the image folders,
