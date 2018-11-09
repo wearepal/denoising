@@ -1,7 +1,7 @@
 import torchvision
 import torch.nn as nn
 from torch.nn import functional as F
-from utils import metrics
+from utils.metrics import *
 
 class _FeatureExtractor(nn.Module):
     def __init__(self, cnn, feature_layer=11):
