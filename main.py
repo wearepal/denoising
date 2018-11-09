@@ -11,7 +11,7 @@ from torchvision import transforms
 from optimisation.training import train, validate
 from utils import TransformedHuaweiDataset
 from torch.utils.data import DataLoader
-from models import BasicGenerator
+import models
 
 parser = argparse.ArgumentParser()
 
@@ -39,6 +39,7 @@ parser.add_argument('-teb', '--test_batch-size', default=1, type=int,
 parser.add_argument('--lr', '--learning-rate', default=0.005, type=float,
                     metavar='LR', help='initial learning rate (default: 0.005)')
 parser.add_argument('--loss', type=str, default='MSE')
+parser.add_argument('--model', type=str, default='BasicGenerator')
 
 parser.add_argument('--resume', metavar='PATH', help='load from a path to a saved checkpoint')
 parser.add_argument('--evaluate', action='store_true',
@@ -75,7 +76,7 @@ def main(args, kwargs):
     writer = SummaryWriter(os.path.join(args.savedir, 'Summaries'))
 
     # TODO: Load model
-    model = BasicGenerator()
+    model = getattr(models, args.model)()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     criterion = torch.nn.MSELoss()
 
