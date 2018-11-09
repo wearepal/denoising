@@ -30,7 +30,7 @@ parser.add_argument('-nc', '--no_cuda', action='store_true', default=False,
 parser.add_argument('--manual_seed', type=int, help='manual seed, if not given resorts to random seed.')
 
 parser.add_argument('-sd', '--save_dir', type=str, metavar='PATH', default='',
-                    help='path to save results and checkpoints to (default: results/<model>/<current timestamp>)')
+                    help='path to save results and checkpoints to (default: ../results/<model>/<current timestamp>)')
 
 parser.add_argument('--epochs', default=100, type=int, metavar='N',
                     help='number of total epochs to run')
@@ -75,6 +75,13 @@ if args.cuda:
     # gpu device number
     torch.cuda.set_device(args.gpu_num)
 
+# Create results path
+if args.save_dir: # If specified
+    save_path = Path(args.save_dir).resolve()
+else:
+    save_path = Path().resolve().parent / "results" / args.model / str(round(time.time()))
+save_path.mkdir() # Will throw an exception if the path exists OR the parent path _doesn't_
+
 kwargs = {'num_workers': 0, 'pin_memory': True} if args.cuda else {'num_workers': args.workers}
 
 # Define transforms:
@@ -99,13 +106,6 @@ def transform_sample(sample):
 def main(args, kwargs):
     print('\nMODEL SETTINGS: \n', args, '\n')
     print("Random Seed: ", args.manual_seed)
-
-    # Create results path
-    if args.save_dir: # If specified
-        save_path = Path(args.save_dir).resolve()
-    else:
-        save_path = Path("").resolve() / "results" / args.model / str(round(time.time()))
-    save_path.mkdir() # Will throw an exception if the path exists OR the parent path _doesn't_
 
     # Save config
     torch.save(args, save_path / 'denoising.config')
