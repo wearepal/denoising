@@ -5,13 +5,14 @@ import shutil
 
 import numpy as np
 import torch
+from torch.utils.data import DataLoader
 from tensorboardX import SummaryWriter
 from torchvision import transforms
 
 from optimisation.training import train, validate
+from optimisation import loss
 from utils import TransformedHuaweiDataset
-from torch.utils.data import DataLoader
-from models import BasicGenerator
+import models
 
 parser = argparse.ArgumentParser()
 
@@ -42,7 +43,9 @@ parser.add_argument('-teb', '--test_batch-size', default=1, type=int,
 
 parser.add_argument('--lr', '--learning-rate', default=0.005, type=float,
                     metavar='LR', help='initial learning rate (default: 0.005)')
-parser.add_argument('--loss', type=str, default='MSE')
+parser.add_argument('--loss', type=str, default='MSELoss')
+parser.add_argument('--model', type=str, default='BasicGenerator')
+parser.add_argument('--optim', type=str, default='Adam')
 
 parser.add_argument('--resume', metavar='PATH', help='load from a path to a saved checkpoint')
 parser.add_argument('--evaluate', action='store_true',
@@ -50,6 +53,11 @@ parser.add_argument('--evaluate', action='store_true',
 
 # gpu/cpu
 parser.add_argument('--gpu_num', type=int, default=0, metavar='GPU', help='choose GPU to run on.')
+
+# CNN
+parser.add_argument('--cnn_in_channels', type=int, default=3)
+parser.add_argument('--cnn_hidden_channels', type=int, default=32)
+parser.add_argument('--cnn_num_hidden_layers', type=int, default=7)
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -74,14 +82,13 @@ def main(args, kwargs):
     print("Random Seed: ", args.manual_seed)
 
     # Save config
-
     torch.save(args, args.save_dir + 'denoising' + '.config')
     writer = SummaryWriter(os.path.join(args.savedir, 'Summaries'))
 
-    # TODO: Load model
-    model = BasicGenerator()
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
-    criterion = torch.nn.MSELoss()
+    # construct network from args
+    model = getattr(models, args.model)(args)
+    optimizer = getattr(torch.optim, args.optim)(model.parameters(), lr=args.lr)
+    criterion = getattr(loss, args.loss)()
 
     if args.cuda:
         print("Model on GPU")
