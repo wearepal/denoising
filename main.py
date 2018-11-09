@@ -80,6 +80,7 @@ if args.save_dir: # If specified
     save_path = Path(args.save_dir).resolve()
 else:
     save_path = Path().resolve().parent / "results" / args.model / str(round(time.time()))
+    save_path.parent.mkdir(exist_ok=True)
 save_path.mkdir() # Will throw an exception if the path exists OR the parent path _doesn't_
 
 kwargs = {'num_workers': 0, 'pin_memory': True} if args.cuda else {'num_workers': args.workers}
