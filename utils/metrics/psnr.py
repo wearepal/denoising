@@ -16,7 +16,7 @@ class PSNR(torch.nn.Module):
         super().__init__()
         self.scale = 1.0 / data_range**2
 
-    def forward(self, im_true, im_test):
+    def forward(self, im_test, im_true):
         err = (im_true - im_test)**2
         mean_err = err.mean(-1).mean(-1).mean(-1)  # reduce the last three dimensions: HxWxD
         return -10 * torch.log10(self.scale * mean_err)
