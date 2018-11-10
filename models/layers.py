@@ -1,3 +1,6 @@
+import math
+
+import torch
 import torch.nn as nn
 
 
@@ -11,36 +14,59 @@ class Identity(nn.Module):
 
 
 class GatedConv2d(nn.Module):
-
+    """
+    Gated convolutional layer.
+    Image ISO values can be used as extra conditioning data.
+    If we want to use conditioning data that takes the form of a vector
+    or coordinate map, a linear and convolutional layer, respectively would
+    need to be used for the biases.
+    """
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, dilation=1,
-                 activation=None, local_condition=False, condition_channels=1):
+                 activation=None, local_condition=False):
         super().__init__()
 
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.kernel_size = kernel_size
+        self.stride = stride
+        self.padding = padding
+        self.dilation = dilation
         self.activation = activation
-        self.sigmoid = nn.Sigmoid()
-
         self.local_condition = local_condition
+
+        self.sigmoid = nn.Sigmoid()
 
         if not local_condition:
             self.conv_features = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, dilation)
             self.conv_gate = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, dilation)
+            self.register_parameter('cond_features_bias', None)
+            self.register_parameter('cond_gate_bias', None)
         else:
             # Because the conditioning data needs to be incorporated into the bias, bias is set to false
             self.conv_features = nn.Conv2d(in_channels, out_channels, kernel_size, stride,
                                            padding, dilation, bias=False)
             self.conv_gate = nn.Conv2d(in_channels, out_channels, kernel_size, stride,
                                        padding, dilation, bias=False)
-            self.cond_features = nn.Conv1d(condition_channels, out_channels, kernel_size=1, bias=False)
-            self.cond_gate = nn.Conv1d(condition_channels, out_channels, kernel_size=1, bias=False)
+            self.cond_features_bias = nn.Parameter(torch.Tensor(out_channels))
+            self.cond_gate_bias = nn.Parameter(torch.Tensor(out_channels))
+            self.reset_parameters()
+
+    def reset_parameters(self):
+        stdv = 1. / math.sqrt(self.in_channels)
+        if self.cond_features_bias is not None:
+            self.cond_features_bias.data.uniform_(-stdv, stdv)
+        if self.cond_gate_bias is not None:
+            self.cond_gate_bias.data.uniform_(-stdv, stdv)
 
     def forward(self, x, c=None):
         """
         hi = σ(Wg,i ∗ xi + V^T g,ic) * activation(Wf,i ∗ xi + V^Tf,ic)
+
         Args:
             x: input tensor, [B, C, H, W]
-            c: extra conditioning data.  Must be a 3D-tensor.
+            c: extra conditioning data (image ISO).
             In cases where c encodes spatial or sequential information (such as a sequence of linguistic features),
-             the matrix products are replaced with convolutions.
+            the matrix products are replaced with convolutions.
 
         Returns:
             layer activations, hi
@@ -48,10 +74,10 @@ class GatedConv2d(nn.Module):
         features = self.conv_features(x)
         gate = self.conv_gate(x)
 
-        if self.local_condition:
-            # features += self.cond_features(c)
-            features += self.cond_features(c)[..., None].expand_as(features)
-            gate += self.cond_gate(c)[..., None].expand_as(gate)
+        if self.local_condition and c is not None:
+            c = c.view(-1, 1)   # enforce extra dimension for broadcasting
+            features += (self.cond_features_bias * c).unsqueeze(-1).unsqueeze(-1)
+            gate += (self.cond_gate_bias * c).unsqueeze(-1).unsqueeze(-1)
 
         if self.activation is not None:
             features = self.activation(features)
@@ -64,36 +90,54 @@ class GatedConv2d(nn.Module):
 class GatedConvTranspose2d(nn.Module):
 
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, output_padding=0, dilation=1,
-                 activation=None, local_condition=False, condition_channels=1):
+                 activation=None, local_condition=False):
         super().__init__()
 
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.kernel_size = kernel_size
+        self.stride = stride
+        self.padding = padding
+        self.output_padding = output_padding
+        self.dilation = dilation
         self.activation = activation
-        self.sigmoid = nn.Sigmoid()
-
         self.local_condition = local_condition
+
+        self.sigmoid = nn.Sigmoid()
 
         if not local_condition:
             self.conv_features = nn.ConvTranspose2d(in_channels, out_channels, kernel_size, stride,
                                                     padding, output_padding, dilation=dilation)
             self.conv_gate = nn.ConvTranspose2d(in_channels, out_channels, kernel_size, stride,
                                                 padding, output_padding, dilation=dilation)
+            self.register_parameter('cond_features_bias', None)
+            self.register_parameter('cond_gate_bias', None)
         else:
             # Because the conditioning data is incorporated into the bias, bias is set to false
             self.conv_features = nn.ConvTranspose2d(in_channels, out_channels, kernel_size, stride,
                                                     padding, output_padding, dilation=dilation, bias=False)
             self.conv_gate = nn.ConvTranspose2d(in_channels, out_channels, kernel_size, stride,
                                                 padding, output_padding, dilation=dilation, bias=False)
-            self.cond_features = nn.Conv1d(condition_channels, out_channels, kernel_size=1, bias=False)
-            self.cond_gate = nn.Conv1d(condition_channels, out_channels, kernel_size=1, bias=False)
+            self.cond_features_bias = nn.Parameter(torch.Tensor(out_channels))
+            self.cond_gate_bias = nn.Parameter(torch.Tensor(out_channels))
+            self.reset_parameters()
+
+    def reset_parameters(self):
+        stdv = 1. / math.sqrt(self.in_channels)
+        if self.cond_features_bias is not None:
+            self.cond_features_bias.data.uniform_(-stdv, stdv)
+        if self.cond_gate_bias is not None:
+            self.cond_gate_bias.data.uniform_(-stdv, stdv)
 
     def forward(self, x, c=None):
         """
         hi = σ(Wg,i ∗ xi + V^T g,ic) * activation(Wf,i ∗ xi + V^Tf,ic)
+
         Args:
             x: input tensor, [B, C, H, W]
-            c: extra conditioning data.  Must be a 3D-tensor.
+            c: extra conditioning data (image ISO)
             In cases where c encodes spatial or sequential information (such as a sequence of linguistic features),
-             the matrix products are replaced with convolutions.
+            the matrix products are replaced with convolutions.
 
         Returns:
             layer activations, hi
@@ -101,9 +145,10 @@ class GatedConvTranspose2d(nn.Module):
         features = self.conv_features(x)
         gate = self.conv_gate(x)
 
-        if self.local_condition:
-            features += self.cond_features(c)[..., None].expand_as(features)
-            gate += self.cond_gate(c)[..., None].expand_as(gate)
+        if self.local_condition and c is not None:
+            c = c.view(-1, 1)   # enforce extra dimension for broadcasting
+            features += (self.cond_features_bias * c).unsqueeze(-1).unsqueeze(-1)
+            gate += (self.cond_gate_bias * c).unsqueeze(-1).unsqueeze(-1)
 
         if self.activation is not None:
             features = self.activation(features)
@@ -164,25 +209,21 @@ class ResidualBLock(nn.Module):
 class GatedResidualBLock(nn.Module):
 
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1,
-                 dilation=(1, 1), residual=True, activation=None, local_condition=False,
-                 condition_channels=1):
+                 dilation=(1, 1), residual=True, activation=None, local_condition=False):
         super().__init__()
 
         conv1_padding = padding * dilation[0]    # ensure the dilation does not affect the output size
         self.conv1 = GatedConv2d(in_channels, out_channels, kernel_size=kernel_size,
                                  stride=stride, padding=conv1_padding, dilation=dilation[0],
-                                 activation=activation, local_condition=local_condition,
-                                 condition_channels=condition_channels)
-
+                                 activation=activation, local_condition=local_condition)
         self.bn1 = nn.BatchNorm2d(out_channels)
 
         conv2_padding = padding * dilation[1]
         self.conv2 = GatedConv2d(out_channels, out_channels, kernel_size=kernel_size,
                                  stride=stride, padding=conv2_padding, dilation=dilation[1],
-                                 activation=activation, local_condition=local_condition,
-                                 condition_channels=condition_channels)
+                                 activation=activation, local_condition=local_condition)
         self.bn2 = nn.BatchNorm2d(out_channels)
-        
+
         self.relu = nn.ReLU()
 
         self.downsample = None
