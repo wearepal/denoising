@@ -14,66 +14,70 @@ from optimisation import loss
 from utils import TransformedHuaweiDataset
 import models
 
-parser = argparse.ArgumentParser()
 
-parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
-                    help='number of data loading workers (default: 4)')
+def parse_arguments(argv=None):
+    parser = argparse.ArgumentParser()
 
-parser.add_argument('-nc', '--no_cuda', action='store_true', default=False,
-                    help='disables CUDA training')
+    parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
+                        help='number of data loading workers (default: 4)')
 
-parser.add_argument('--manual_seed', type=int, help='manual seed, if not given resorts to random seed.')
+    parser.add_argument('-nc', '--no_cuda', action='store_true', default=False,
+                        help='disables CUDA training')
 
-parser.add_argument('-sd', '--save_dir', type=str, metavar='PATH', default='results/save_dir',
-                    help='path to save results and checkpoints to (default: results/save_dir)')
+    parser.add_argument('--manual_seed', type=int, help='manual seed, if not given resorts to random seed.')
 
-parser.add_argument('--epochs', default=100, type=int, metavar='N',
-                    help='number of total epochs to run')
-parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
-                    help='manual epoch number (useful on restarts)')
+    parser.add_argument('-sd', '--save_dir', type=str, metavar='PATH', default='results/save_dir',
+                        help='path to save results and checkpoints to (default: results/save_dir)')
 
-parser.add_argument('-trb', '--train_batch-size', default=256, type=int,
-                    metavar='N', help='mini-batch size for training data (default: 256)')
-parser.add_argument('-teb', '--test_batch-size', default=1, type=int,
-                    metavar='N', help='mini-batch size for test data (default: 1)')
+    parser.add_argument('--epochs', default=100, type=int, metavar='N',
+                        help='number of total epochs to run')
+    parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
+                        help='manual epoch number (useful on restarts)')
 
-parser.add_argument('--lr', '--learning-rate', default=0.005, type=float,
-                    metavar='LR', help='initial learning rate (default: 0.005)')
-parser.add_argument('--loss', type=str, default='MSELoss')
-parser.add_argument('--model', type=str, default='BasicGenerator')
-parser.add_argument('--optim', type=str, default='Adam')
+    parser.add_argument('-trb', '--train_batch-size', default=256, type=int,
+                        metavar='N', help='mini-batch size for training data (default: 256)')
+    parser.add_argument('-teb', '--test_batch-size', default=1, type=int,
+                        metavar='N', help='mini-batch size for test data (default: 1)')
 
-parser.add_argument('--resume', metavar='PATH', help='load from a path to a saved checkpoint')
-parser.add_argument('--evaluate', action='store_true',
-                    help='evaluate model on validation set (default: false)')
+    parser.add_argument('--lr', '--learning-rate', default=0.005, type=float,
+                        metavar='LR', help='initial learning rate (default: 0.005)')
+    parser.add_argument('--loss', type=str, default='MSELoss')
+    parser.add_argument('--model', type=str, default='BasicGenerator')
+    parser.add_argument('--optim', type=str, default='Adam')
 
-# gpu/cpu
-parser.add_argument('--gpu_num', type=int, default=0, metavar='GPU', help='choose GPU to run on.')
+    parser.add_argument('--resume', metavar='PATH', help='load from a path to a saved checkpoint')
+    parser.add_argument('--evaluate', action='store_true',
+                        help='evaluate model on validation set (default: false)')
 
-# CNN
-parser.add_argument('--cnn_in_channels', type=int, default=3)
-parser.add_argument('--cnn_hidden_channels', type=int, default=32)
-parser.add_argument('--cnn_num_hidden_layers', type=int, default=7)
+    # gpu/cpu
+    parser.add_argument('--gpu_num', type=int, default=0, metavar='GPU', help='choose GPU to run on.')
 
-args = parser.parse_args()
-args.cuda = not args.no_cuda and torch.cuda.is_available()
+    # CNN
+    parser.add_argument('--cnn_in_channels', type=int, default=3)
+    parser.add_argument('--cnn_hidden_channels', type=int, default=32)
+    parser.add_argument('--cnn_num_hidden_layers', type=int, default=7)
 
-# Random seeding
-if args.manual_seed is None:
-    args.manual_seed = random.randint(1, 100000)
-random.seed(args.manual_seed)
-np.random.seed(args.manual_seed)
-torch.manual_seed(args.manual_seed)
-torch.cuda.manual_seed_all(args.manual_seed)
-
-if args.cuda:
-    # gpu device number
-    torch.cuda.set_device(args.gpu_num)
-
-kwargs = {'num_workers': 0, 'pin_memory': True} if args.cuda else {'num_workers': args.workers}
+    return parser.parse_args(args=argv)
 
 
-def main(args, kwargs):
+def main(args):
+    args.cuda = not args.no_cuda and torch.cuda.is_available()
+
+    # Random seeding
+    if args.manual_seed is None:
+        args.manual_seed = random.randint(1, 100000)
+    random.seed(args.manual_seed)
+    np.random.seed(args.manual_seed)
+    torch.manual_seed(args.manual_seed)
+    torch.cuda.manual_seed_all(args.manual_seed)
+
+    if args.cuda:
+        # gpu device number
+        torch.cuda.set_device(args.gpu_num)
+
+    kwargs = {'num_workers': 0, 'pin_memory': True} if args.cuda else {'num_workers': args.workers}
+
+
     print('\nMODEL SETTINGS: \n', args, '\n')
     print("Random Seed: ", args.manual_seed)
 
@@ -149,13 +153,13 @@ def main(args, kwargs):
             'optimizer': optimizer.state_dict(),
             'best_loss': best_loss
         }
-        save_checkpoint(checkpoint, model_filename, is_best)
+        save_checkpoint(checkpoint, model_filename, is_best, args.save_dir)
 
 
-def save_checkpoint(checkpoint, filename, is_best):
+def save_checkpoint(checkpoint, filename, is_best, save_dir):
     print("===> Saving checkpoint '{}'".format(filename))
-    model_filename = os.path.join(args.save_dir, filename)
-    best_filename = os.path.join(args.save_dir, 'model_best.pth.tar')
+    model_filename = os.path.join(save_dir, filename)
+    best_filename = os.path.join(save_dir, 'model_best.pth.tar')
     torch.save(checkpoint, model_filename)
     if is_best:
         shutil.copyfile(model_filename, best_filename)
@@ -163,4 +167,4 @@ def save_checkpoint(checkpoint, filename, is_best):
 
 
 if __name__ == '__main__':
-    main(args, kwargs)
+    main(parse_arguments())
