@@ -1,4 +1,5 @@
 import torch.nn as nn
+from torch.nn import functional as F
 
 from models.layers import GatedConv2d
 
@@ -12,11 +13,11 @@ class SimpleCNN(nn.Module):
         super().__init__()
 
         def _generator_block(_in_channels, _out_channels):
-            conv = nn.Conv2d(_in_channels, _out_channels, kernel_size=3, stride=1, padding=1)
+            conv = nn.Conv2d(_in_channels, _out_channels, kernel_size=3, stride=1, padding=1, bias=False)
             block = nn.Sequential(
                 conv,
                 nn.BatchNorm2d(_out_channels),
-                nn.ReLU()
+                nn.ReLU(inplace=True)
             )
             return block
 
@@ -50,11 +51,11 @@ class SimpleGatedCNN(nn.Module):
             def __init__(self, _in_channels, _out_channels, _local_condition):
                 super().__init__()
                 self.conv = GatedConv2d(_in_channels, _out_channels, kernel_size=3, stride=1,
-                                        padding=1, local_condition=_local_condition)
+                                        padding=1, local_condition=_local_condition, residual=True)
                 self.bn = nn.BatchNorm2d(_out_channels)
 
             def forward(self, x, c):
-                return self.bn(self.conv(x, c))
+                return F.relu(self.bn(self.conv(x, c)), inplace=True)
 
         # Input layer
         layers = [_GeneratorBlock(args.cnn_in_channels, args.cnn_hidden_channels,
