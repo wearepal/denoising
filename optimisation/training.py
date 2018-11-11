@@ -115,6 +115,6 @@ def validate(args, val_loader, model, criterion, training_iters, summary_writer)
     summary_writer.add_scalar('Test/Loss', average_loss, training_iters)
 
     print("===> Average total loss: {:4f}".format(average_loss))
-    print("===> Average batch time: {:.4f}".format(batch_time.item()))
+    print("===> Average batch time: {:.4f}".format(batch_time.value()[0]))
 
     return average_loss
