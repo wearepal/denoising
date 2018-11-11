@@ -27,16 +27,22 @@ class SimpleCNN(nn.Module):
         for _ in range(args.cnn_num_hidden_layers):
             layers.append(_generator_block(args.cnn_hidden_channels, args.cnn_hidden_channels))
         # Output layer
-        layers.append(nn.Sequential(
-            nn.Conv2d(in_channels=args.cnn_hidden_channels, out_channels=args.cnn_in_channels,
-                      kernel_size=3, stride=1, padding=1),
-            nn.Tanh()
-        ))
+        layers.append(nn.Conv2d(in_channels=args.cnn_hidden_channels, out_channels=args.cnn_in_channels,
+                                kernel_size=3, stride=1, padding=1))
 
         self.model = nn.Sequential(*layers)
+        self.tanh = nn.Tanh()
+        self.residual = args.learn_noise
 
     def forward(self, x, c=None):
-        return self.model(x)
+        out = self.model(x)
+
+        if self.residual:   # learn noise residual
+            out = self.tanh(out) + x
+
+        out = self.tanh(out)
+
+        return out
 
 
 class SimpleGatedCNN(nn.Module):
@@ -70,9 +76,17 @@ class SimpleGatedCNN(nn.Module):
         self.model = nn.ModuleList(layers)
         self.tanh = nn.Tanh()
 
+        self.residual = args.learn_noise
+
     def forward(self, x, c=None):
         out = x
+
         for layer in self.model:
             out = layer(out, c)
 
-        return self.tanh(out)
+        if self.residual:   # learn noise residual
+            out = self.tanh(out) + x
+
+        out = self.tanh(out)
+
+        return out

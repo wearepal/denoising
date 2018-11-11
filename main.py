@@ -54,6 +54,8 @@ parser.add_argument('--gpu_num', type=int, default=0, metavar='GPU', help='choos
 parser.add_argument('--cnn_in_channels', type=int, default=3)
 parser.add_argument('--cnn_hidden_channels', type=int, default=32)
 parser.add_argument('--cnn_num_hidden_layers', type=int, default=7)
+parser.add_argument('-ln', '--learn_noise', action='store_true', default=False,
+                    help='learn noise as a residual')
 parser.add_argument('-ni', '--no_iso', action='store_true', default=False,
                     help='not to use image ISO values as extra conditioning data')
 
