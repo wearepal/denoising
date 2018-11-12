@@ -29,7 +29,6 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
             noisy = noisy.cuda() if args.cuda else noisy
             clean = clean.cuda() if args.cuda else clean
 
-            iso = torch.Tensor(iso)
             iso = iso.cuda() if args.cuda else iso
 
             # Clear past gradients
@@ -96,7 +95,6 @@ def validate(args, val_loader, model, criterion, training_iters, summary_writer)
                 noisy = noisy.cuda() if args.cuda else noisy
                 clean = clean.cuda() if args.cuda else clean
 
-                iso = torch.Tensor(iso)
                 iso = iso.cuda() if args.cuda else iso
 
                 # Denoise the image and calculate the loss wrt target clean image
