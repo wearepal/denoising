@@ -162,8 +162,8 @@ def evaluate_psnr_ssim(args, model, data_loader):
                 end = time.time()
 
                 # Update progress bar
-                pbar.set_postfix(psnr=psnr.mean)
-                pbar.set_postfix(ssim=ssim.mean)
+                pbar.set_postfix(psnr=psnr.item())
+                pbar.set_postfix(ssim=ssim.item())
                 pbar.update()
 
     average_psnr = psnr_meter.mean
