@@ -55,21 +55,20 @@ class TransformedHuaweiDataset(Dataset):
         noisy_location = self.root_dir / str(original_index) / "noisy" / f"{patch_index}.png"
         return clean_location, noisy_location
     
-    def random_split(self, test_ratio=0.5, seed=None):
+    def random_split(self, test_ratio=0.5, data_subset=1.0, seed=None):
         if seed is not None:
             np.random.seed(seed)
         n_test_images = int(self.n_originals * test_ratio)
-        test_original_idx = np.random.choice(np.arange(self.n_originals), n_test_images, replace=False)
-        train_original_idx = np.setdiff1d(np.arange(self.n_originals), test_original_idx)
-        test_idx = np.concatenate([np.arange(image_no * self.patches, (image_no + 1) * self.patches) for image_no in test_original_idx])
-        train_idx = np.concatenate([np.arange(image_no * self.patches, (image_no + 1) * self.patches) for image_no in train_original_idx])
-        np.random.shuffle(test_idx)
-        np.random.shuffle(train_idx)
-        return Subset(self, train_idx), Subset(self, test_idx)
+        test_original_indices = np.random.choice(np.arange(self.n_originals), n_test_images, replace=False)
+        train_original_indices = np.setdiff1d(np.arange(self.n_originals), test_original_indices)
 
+        train_indices = np.concatenate([np.arange(image_no * self.patches, (image_no + 1) * self.patches) for image_no in train_original_indices])
+        train_indices = np.random.choice(train_indices, int(len(train_indices)*data_subset), replace=False)
 
+        test_indices = np.concatenate([np.arange(image_no * self.patches, (image_no + 1) * self.patches) for image_no in test_original_indices])
+        test_indices = np.random.choice(test_indices, int(len(test_indices)*data_subset), replace=False)
 
-
+        return Subset(self, train_indices), Subset(self, test_indices)
 
 
 class HuaweiDataset(Dataset):
