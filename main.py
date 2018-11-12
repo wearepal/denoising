@@ -45,7 +45,7 @@ parser.add_argument('-teb', '--test_batch-size', default=1, type=int,
 parser.add_argument('--lr', '--learning-rate', default=0.005, type=float,
                     metavar='LR', help='initial learning rate (default: 0.005)')
 parser.add_argument('--loss', type=str, default='MSELoss')
-parser.add_argument('--model', type=str, default='BasicGenerator')
+parser.add_argument('--model', type=str, default='SimpleCNN')
 parser.add_argument('--optim', type=str, default='Adam')
 
 parser.add_argument('--resume', metavar='PATH', help='load from a path to a saved checkpoint')
