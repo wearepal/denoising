@@ -41,7 +41,7 @@ parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
 
 parser.add_argument('-trb', '--train_batch-size', default=256, type=int,
                     metavar='N', help='mini-batch size for training data (default: 256)')
-parser.add_argument('-teb', '--test_batch-size', default=1, type=int,
+parser.add_argument('-teb', '--test_batch-size', default=256, type=int,
                     metavar='N', help='mini-batch size for test data (default: 1)')
 
 parser.add_argument('--lr', '--learning-rate', default=0.005, type=float,
