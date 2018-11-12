@@ -17,9 +17,11 @@ import models
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('-d', '--data_dir', help='location of transformed data')
+parser.add_argument('-dd', '--data_dir', help='location of transformed data')
 parser.add_argument('-ts', '--test_split', help='Fraction of data to be used for validation',
                     default=0.2, type=float)
+parser.add_argument('-ds', '--data_subset', help='Fraction of crops per image to be used',
+                    default=1.0, type=float)
 
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
@@ -39,7 +41,7 @@ parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
 
 parser.add_argument('-trb', '--train_batch-size', default=256, type=int,
                     metavar='N', help='mini-batch size for training data (default: 256)')
-parser.add_argument('-teb', '--test_batch-size', default=1, type=int,
+parser.add_argument('-teb', '--test_batch-size', default=256, type=int,
                     metavar='N', help='mini-batch size for test data (default: 1)')
 
 parser.add_argument('--lr', '--learning-rate', default=0.005, type=float,
@@ -126,7 +128,8 @@ def main(args, kwargs):
     criterion = criterion.cuda() if args.cuda else criterion
 
     dataset = TransformedHuaweiDataset(root_dir=args.data_dir, transform=transform_sample)
-    train_dataset, val_dataset = dataset.random_split(test_ratio=args.test_split)
+    train_dataset, val_dataset = dataset.random_split(test_ratio=args.test_split,
+                                                      data_subset=args.data_subset)
 
     train_loader = DataLoader(train_dataset, batch_size=args.train_batch_size,
                               shuffle=True, **kwargs)
