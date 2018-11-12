@@ -17,12 +17,15 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
     # Start progress bar. Maximum value = number of batches.
     with tqdm(total=steps) as pbar:
         # Iterate through the training batch samples
-        for i, (noisy, clean, iso) in enumerate(train_loader):
+        for i, sample in enumerate(train_loader):
+            noisy = sample['noisy']
+            clean = sample['clean']
+            iso = sample['iso']
             # Send inputs to correct device
             noisy = noisy.cuda() if args.cuda else noisy
             clean = clean.cuda() if args.cuda else clean
             # ISO needs to be a 3d tensor to be passed to Gated Convolutions
-            iso = torch.FloatTensor(iso.values).view(noisy.size(0), -1, 1)
+            iso = iso.view(noisy.size(0), -1, 1)
             iso = iso.cuda() if args.cuda else iso
 
             # Clear past gradients
@@ -42,16 +45,16 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
             end = time.time()
 
             # Update progress bar
-            pbar.set_postfix(loss=loss.value()[0])
+            pbar.set_postfix(loss=loss.item())
             pbar.update()
 
             # Write the results to tensorboard
             summary_writer.add_scalar('Train/Loss', loss, (epoch * steps) + i)
 
-    print("===> Average total loss: {:4f}".format(loss.value()[0]))
+    print("===> Average total loss: {:4f}".format(loss.item()))
     print("===> Average batch time: {:.4f}".format(batch_time.value()[0]))
 
-    return loss.value()[0]
+    return loss.item()
 
 
 def validate(args, val_loader, model, criterion, training_iters, summary_writer):
@@ -80,12 +83,15 @@ def validate(args, val_loader, model, criterion, training_iters, summary_writer)
         # Start progress bar. Maximum value = number of batches.
         with tqdm(total=steps) as pbar:
             # Iterate through the validation batch samples
-            for i, (noisy, clean, iso) in enumerate(val_loader):
+            for i, sample in enumerate(val_loader):
+                noisy = sample['noisy']
+                clean = sample['clean']
+                iso = sample['iso']
                 # Send inputs to correct device
                 noisy = noisy.cuda() if args.cuda else noisy
                 clean = clean.cuda() if args.cuda else clean
                 # ISO needs to be a 3d tensor to be passed to Gated Convolutions
-                iso = torch.FloatTensor(iso.values).view(noisy.size(0), -1, 1)
+                iso = iso.view(noisy.size(0), -1, 1)
                 iso = iso.cuda() if args.cuda else iso
 
                 # Denoise the image and calculate the loss wrt target clean image
@@ -100,10 +106,10 @@ def validate(args, val_loader, model, criterion, training_iters, summary_writer)
                 end = time.time()
 
                 # Update progress bar
-                pbar.set_postfix(loss=loss.value()[0])
+                pbar.set_postfix(loss=loss.item())
                 pbar.update()
 
-    average_loss = loss.value()[0]
+    average_loss = loss.item()
     # Write average loss to tensorboard
     summary_writer.add_scalar('Test/Loss', average_loss, training_iters)
 
