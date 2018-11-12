@@ -53,7 +53,7 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
             summary_writer.add_scalar('Train/Loss', loss, (epoch * steps) + i)
 
     print("===> Average total loss: {:4f}".format(loss.item()))
-    print("===> Average batch time: {:.4f}".format(batch_time.item()))
+    print("===> Average batch time: {:.4f}".format(batch_time.value()[0]))
 
     return loss.item()
 
