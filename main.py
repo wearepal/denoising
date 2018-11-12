@@ -118,7 +118,7 @@ def main(args, kwargs):
 
     # Save config
     torch.save(args, save_path / 'denoising.config')
-    writer = SummaryWriter(Path(args.save_dir).resolve() / 'Summaries')
+    writer = SummaryWriter(save_path / 'summaries')
 
     # construct network from args
     model = getattr(models, args.model)(args)
