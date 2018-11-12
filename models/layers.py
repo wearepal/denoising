@@ -23,7 +23,8 @@ def norm(num_norm_groups, num_channels):
 class ConvLayer(nn.Module):
 
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, dilation=1,
-                 num_norm_groups=0, no_norm=False, preserve_size=False, layer_activation=nn.ReLU(inplace=True)):
+                 layer_activation=nn.ReLU(inplace=True), num_norm_groups=0, normalize=True,
+                 preserve_size=False):
         super().__init__()
 
         self.in_channels = in_channels
@@ -31,7 +32,7 @@ class ConvLayer(nn.Module):
         self.kernel_size = kernel_size
         self.stride = stride
 
-        if preserve_size:
+        if preserve_size:   # Does not work for stride > 1
             padding = (((kernel_size + 1) / 2) - 1) * dilation
 
         self.padding = padding
@@ -39,12 +40,18 @@ class ConvLayer(nn.Module):
         self.num_norm_groups = num_norm_groups
         self.preserve_size = preserve_size
 
-        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, dilation, bias=no_norm)
-        self.norm = norm(num_norm_groups, out_channels) if not no_norm else Identity()
-        self.layer_activation = layer_activation if layer_activation is not None else Identity()
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, dilation, bias=normalize)
+        self.norm = norm(num_norm_groups, out_channels) if normalize else None
+        self.layer_activation = layer_activation
 
     def forward(self, x):
-        return self.layer_activation(self.norm(self.conv(x)))
+        out = self.conv(x)
+        if self.norm is not None:
+            out = self.norm(out)
+        if self.layer_activation is not None:
+            out = self.layer_activation(out)
+
+        return out
 
 
 class GatedConv2d(nn.Module):
@@ -140,7 +147,7 @@ class GatedConvLayer(nn.Module):
 
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, dilation=1,
                  conv_activation=None, layer_activation=nn.ReLU(inplace=True), local_condition=False,
-                 conv_residual=True, num_norm_groups=0, no_norm=False, preserve_size=False):
+                 conv_residual=True, num_norm_groups=0, normalize=True, preserve_size=False):
         super().__init__()
 
         self.in_channels = in_channels
@@ -148,7 +155,7 @@ class GatedConvLayer(nn.Module):
         self.kernel_size = kernel_size
         self.stride = stride
 
-        if preserve_size:
+        if preserve_size:   # Does not work for stride > 1
             padding = (((kernel_size + 1) / 2) - 1) * dilation
 
         self.padding = padding
@@ -161,11 +168,17 @@ class GatedConvLayer(nn.Module):
 
         self.conv = GatedConv2d(in_channels, out_channels, kernel_size, stride, padding, dilation,
                                 conv_activation, local_condition, conv_residual)
-        self.norm = norm(num_norm_groups, out_channels) if not no_norm else Identity()
-        self.layer_activation = layer_activation if layer_activation is not None else Identity()
+        self.norm = norm(num_norm_groups, out_channels) if normalize else None
+        self.layer_activation = layer_activation
 
     def forward(self, x, c=None):
-        return self.layer_activation(self.norm(self.conv(x, c)))
+        out = self.conv(x, c)
+        if self.norm is not None:
+            out = self.norm(out)
+        if self.layer_activation is not None:
+            out = self.layer_activation(out)
+
+        return out
 
 
 class GatedConvTranspose2d(nn.Module):
