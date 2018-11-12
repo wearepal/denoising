@@ -10,7 +10,6 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
     loss = AverageValueMeter()
     
     # Switch to train mode
-    model = model.cuda() if args.cuda else model
     model.train()
 
     end = time.time()

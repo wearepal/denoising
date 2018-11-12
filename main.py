@@ -115,8 +115,10 @@ def main(args, kwargs):
 
     # construct network from args
     model = getattr(models, args.model)(args)
+    model = model.cuda() if args.cuda else model
     optimizer = getattr(torch.optim, args.optim)(model.parameters(), lr=args.lr)
     criterion = getattr(loss, args.loss)()
+    criterion = criterion.cuda() if args.cuda else criterion
 
     dataset = TransformedHuaweiDataset(root_dir=args.data_dir, transform=transform_sample)
     train_dataset, val_dataset = dataset.random_split(test_ratio=args.test_split)
