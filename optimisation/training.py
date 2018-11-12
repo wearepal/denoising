@@ -2,6 +2,8 @@ import time
 from tqdm import tqdm
 import torch
 from torchnet.meter import AverageValueMeter
+import torchvision.utils as vutils
+
 from utils.metrics.psnr import PSNR
 from utils.metrics.ssim import SSIM
 
@@ -106,6 +108,16 @@ def validate(args, val_loader, model, criterion, training_iters, summary_writer)
                 batch_time_meter.add(time.time() - end)
                 end = time.time()
 
+                # TODO: Make robust to smaller batch sizes
+                if args.test_batch_size >= 20:
+                    if i == 0:
+                        summary_writer.add_image(
+                            'denoised', vutils.make_grid(denoised.data[:20], normalize=True,
+                                                         scale_each=True), training_iters)
+                        summary_writer.add_image(
+                            'clean_images', vutils.make_grid(clean.data[:20], normalize=True,
+                                                             scale_each=True), training_iters)
+
                 # Update progress bar
                 pbar.set_postfix(loss=loss_meter.mean)
                 pbar.update()
@@ -138,7 +150,7 @@ def evaluate_psnr_ssim(args, model, data_loader):
         # Start progress bar. Maximum value = number of batches.
         with tqdm(total=steps) as pbar:
             # Iterate through the validation batch samples
-            for i, sample in enumerate(train_loader):
+            for i, sample in enumerate(data_loader):
                 noisy = sample['noisy']
                 clean = sample['clean']
                 iso = sample['iso']
@@ -175,3 +187,5 @@ def evaluate_psnr_ssim(args, model, data_loader):
     # TODO: Save results to a csv/text file
 
     return average_psnr, average_ssim
+
+
