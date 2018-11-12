@@ -90,7 +90,7 @@ else:
     save_path.parent.mkdir(exist_ok=True)
 save_path.mkdir() # Will throw an exception if the path exists OR the parent path _doesn't_
 
-kwargs = {'num_workers': 0, 'pin_memory': True} if args.cuda else {'num_workers': args.workers}
+kwargs = {'pin_memory': True} if args.cuda else {}
 
 # Define transforms:
 noisy_transforms = transforms.Compose(
@@ -132,10 +132,10 @@ def main(args, kwargs):
                                                       data_subset=args.data_subset)
 
     train_loader = DataLoader(train_dataset, batch_size=args.train_batch_size,
-                              shuffle=True, **kwargs)
+                              shuffle=True, num_workers=args.workers, **kwargs)
 
     val_loader = DataLoader(val_dataset, batch_size=args.test_batch_size,
-                            shuffle=False, **kwargs)
+                            shuffle=False, num_workers=args.workers, **kwargs)
 
     best_loss = np.inf
 
