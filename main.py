@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from tensorboardX import SummaryWriter
 from torchvision import transforms
 
-from optimisation.training import train, validate
+from optimisation.training import train, validate, evaluate_psnr_ssim
 from optimisation import loss
 from utils import TransformedHuaweiDataset
 import models
@@ -123,8 +123,8 @@ def main(args, kwargs):
             optimizer.load_state_dict(checkpoint['optimizer'])
 
     if args.evaluate:
-        training_iters = args.start_epoch * len(train_loader)
-        validate(args, val_loader, model, criterion, training_iters, writer)
+        # Evaluate model using PSNR and SSIM metrics
+        evaluate_psnr_ssim(args, model, val_loader)
         return
 
     for epoch in range(args.start_epoch, args.epochs):
@@ -132,11 +132,11 @@ def main(args, kwargs):
 
         # Train
         print("===> Training on Epoch %d" % epoch)
-        train(train_loader, model, criterion, optimizer, epoch)
+        train(args, train_loader, model, criterion, optimizer, epoch, writer)
 
         # Validate
         print("===> Validating on Epoch %d" % epoch)
-        val_loss = validate(val_loader, model, criterion, training_iters)
+        val_loss = validate(args, val_loader, model, criterion, training_iters, writer)
 
         is_best = val_loss < best_loss
         best_loss = min(val_loss, best_loss)
@@ -150,6 +150,9 @@ def main(args, kwargs):
             'best_loss': best_loss
         }
         save_checkpoint(checkpoint, model_filename, is_best)
+
+    # Evaluate model using PSNR and SSIM metrics
+    evaluate_psnr_ssim(args, model, val_loader)
 
 
 def save_checkpoint(checkpoint, filename, is_best):

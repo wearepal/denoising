@@ -2,12 +2,14 @@ import time
 from tqdm import tqdm
 import torch
 from torchnet.meter import AverageValueMeter
+from utils.metrics.psnr import PSNR
+from utils.metrics.ssim import SSIM
 
 
 def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer):
     # Meters to log batch time and loss
-    batch_time = AverageValueMeter()
-    loss = AverageValueMeter()
+    batch_time_meter = AverageValueMeter()
+    loss_meter = AverageValueMeter()
 
     # Switch to train mode
     model.train()
@@ -21,8 +23,8 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
             # Send inputs to correct device
             noisy = noisy.cuda() if args.cuda else noisy
             clean = clean.cuda() if args.cuda else clean
-            # ISO needs to be a 3d tensor to be passed to Gated Convolutions
-            iso = torch.FloatTensor(iso.values).view(noisy.size(0), -1, 1)
+
+            iso = torch.Tensor(iso)
             iso = iso.cuda() if args.cuda else iso
 
             # Clear past gradients
@@ -37,21 +39,22 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
             optimizer.step()
 
             # Update meters
-            loss.add(loss.item())
-            batch_time.add(time.time() - end)
+            loss_meter.add(loss.item())
+            batch_time_meter.add(time.time() - end)
             end = time.time()
 
             # Update progress bar
-            pbar.set_postfix(loss=loss.value()[0])
+            pbar.set_postfix(loss=loss_meter.value()[0])
             pbar.update()
 
             # Write the results to tensorboard
             summary_writer.add_scalar('Train/Loss', loss, (epoch * steps) + i)
 
-    print("===> Average total loss: {:4f}".format(loss.value()[0]))
-    print("===> Average batch time: {:.4f}".format(batch_time.value()[0]))
+    average_loss = loss_meter.value()[0]
+    print("===> Average total loss: {:4f}".format(average_loss))
+    print("===> Average batch time: {:.4f}".format(batch_time_meter.value()[0]))
 
-    return loss.value()[0]
+    return average_loss
 
 
 def validate(args, val_loader, model, criterion, training_iters, summary_writer):
@@ -68,8 +71,8 @@ def validate(args, val_loader, model, criterion, training_iters, summary_writer)
         Average loss on validation samples
     """
     # Average meters
-    batch_time = AverageValueMeter()
-    loss = AverageValueMeter()
+    batch_time_meter = AverageValueMeter()
+    loss_meter = AverageValueMeter()
 
     # Switch to evaluation mode
     model.eval()
@@ -84,30 +87,82 @@ def validate(args, val_loader, model, criterion, training_iters, summary_writer)
                 # Send inputs to correct device
                 noisy = noisy.cuda() if args.cuda else noisy
                 clean = clean.cuda() if args.cuda else clean
-                # ISO needs to be a 3d tensor to be passed to Gated Convolutions
-                iso = torch.FloatTensor(iso.values).view(noisy.size(0), -1, 1)
+
+                iso = torch.Tensor(iso)
                 iso = iso.cuda() if args.cuda else iso
 
                 # Denoise the image and calculate the loss wrt target clean image
                 denoised = model(noisy, iso)
                 loss = criterion(denoised, clean)
 
-                # Calculate gradients and update weights
-
                 # Update meters
-                loss.add(loss.item())
-                batch_time.add(time.time() - end)
+                loss_meter.add(loss.item())
+                batch_time_meter.add(time.time() - end)
                 end = time.time()
 
                 # Update progress bar
-                pbar.set_postfix(loss=loss.value()[0])
+                pbar.set_postfix(loss=loss_meter.value()[0])
                 pbar.update()
 
-    average_loss = loss.value()[0]
+    average_loss = loss_meter.value()[0]
     # Write average loss to tensorboard
     summary_writer.add_scalar('Test/Loss', average_loss, training_iters)
 
     print("===> Average total loss: {:4f}".format(average_loss))
-    print("===> Average batch time: {:.4f}".format(batch_time.value()[0]))
+    print("===> Average batch time: {:.4f}".format(batch_time_meter.value()[0]))
 
     return average_loss
+
+
+def evaluate_psnr_ssim(args, model, data_loader):
+    # Average meters
+    batch_time_meter = AverageValueMeter()
+    psnr_meter = AverageValueMeter()
+    ssim_meter = AverageValueMeter()
+
+    psnr_calculator = PSNR(data_range=1)
+    ssim_calculator = SSIM(data_range=1, channels=3)
+
+    # Switch to evaluation mode
+    model.eval()
+
+    with torch.no_grad():
+        end = time.time()
+        steps = len(data_loader)
+        # Start progress bar. Maximum value = number of batches.
+        with tqdm(total=steps) as pbar:
+            # Iterate through the validation batch samples
+            for i, (noisy, clean, iso) in enumerate(data_loader):
+                # Send inputs to correct device
+                noisy = noisy.cuda() if args.cuda else noisy
+                clean = clean.cuda() if args.cuda else clean
+
+                iso = torch.Tensor(iso)
+                iso = iso.cuda() if args.cuda else iso
+
+                # Denoise the image and calculate the loss wrt target clean image
+                denoised = model(noisy, iso)
+                psnr = psnr_calculator(denoised, clean)
+                ssim = ssim_calculator(denoised, clean)
+
+                # Update meters
+                psnr_meter.add(psnr.item())
+                ssim_meter.add(ssim.item())
+
+                batch_time_meter.add(time.time() - end)
+                end = time.time()
+
+                # Update progress bar
+                pbar.set_postfix(psnr=psnr.value()[0])
+                pbar.set_postfix(ssim=ssim.value()[0])
+                pbar.update()
+
+    average_psnr = psnr_meter.value()[0]
+    average_ssim = ssim_meter.value()[0]
+    # Write average loss to tensorboard
+    print("===> Average PSNR score: {:4f}".format(average_psnr))
+    print("===> Average SSIM score: {:4f}".format(average_ssim))
+    print("===> Average batch time: {:.4f}".format(batch_time_meter.value()[0]))
+    # TODO: Save results to a csv/text file
+
+    return average_psnr, average_ssim
