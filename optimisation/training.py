@@ -8,7 +8,7 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
     # Meters to log batch time and loss
     batch_time = AverageValueMeter()
     loss = AverageValueMeter()
-    
+
     # Switch to train mode
     model.train()
 
