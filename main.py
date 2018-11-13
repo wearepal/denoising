@@ -108,7 +108,7 @@ def transform_sample(sample):
     transformed_sample = {
         'clean': clean_transforms(sample['clean']),
         'noisy': noisy_transforms(sample['noisy']),
-        'iso': sample['iso']
+        'iso': (sample['iso'] - 1215.32) / 958.59   # (x - mean) / std
     }
     return transformed_sample
 
