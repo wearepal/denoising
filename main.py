@@ -108,7 +108,7 @@ def transform_sample(sample):
     transformed_sample = {
         'clean': clean_transforms(sample['clean']),
         'noisy': noisy_transforms(sample['noisy']),
-        'iso': float((sample['iso'] - 1215.32) / 958.13)   # (x - mean) / std
+        'iso': torch.FloatTensor((sample['iso'] - 1215.32) / 958.13)   # (x - mean) / std
     }
     return transformed_sample
 
