@@ -105,13 +105,16 @@ def validate(args, val_loader, model, criterion, training_iters, summary_writer)
                 end = time.time()
 
                 # TODO: Make robust to smaller batch sizes
-                if args.test_batch_size >= 20:
+                if args.test_batch_size >= 24:
                     if i == 0:
                         summary_writer.add_image(
-                            'denoised', vutils.make_grid(denoised.data[:20], normalize=True,
-                                                         scale_each=True), training_iters)
+                            'noisy_images', vutils.make_grid(noisy.data[:24], normalize=True,
+                                                             scale_each=True), training_iters)
                         summary_writer.add_image(
-                            'clean_images', vutils.make_grid(clean.data[:20], normalize=True,
+                            'denoised_images', vutils.make_grid(denoised.data[:24], normalize=True,
+                                                                scale_each=True), training_iters)
+                        summary_writer.add_image(
+                            'clean_images', vutils.make_grid(clean.data[:24], normalize=True,
                                                              scale_each=True), training_iters)
 
                 # Update progress bar
@@ -157,8 +160,8 @@ def evaluate_psnr_ssim(args, model, data_loader):
 
                 # Denoise the image and calculate the loss wrt target clean image
                 denoised = model(noisy, iso)
-                psnr = psnr_calculator(denoised, clean)
-                ssim = ssim_calculator(denoised, clean)
+                psnr = psnr_calculator(denoised, clean).mean()
+                ssim = ssim_calculator(denoised, clean).mean()
 
                 # Update meters
                 psnr_meter.add(psnr.item())

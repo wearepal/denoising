@@ -1,7 +1,9 @@
 import torchvision
 import torch.nn as nn
+from torch.nn import MSELoss
 from torch.nn import functional as F
 from utils.metrics import *
+
 
 class _FeatureExtractor(nn.Module):
     def __init__(self, cnn, feature_layer=11):
@@ -76,18 +78,3 @@ class HingeLossGAN(nn.Module):
             Hinge loss for the discriminator
         """
         return (F.relu(1.0 - discriminator(real)).mean()) + (F.relu(1.0 + discriminator(fake)).mean())
-
-
-class MSELoss(nn.Module):
-    """
-    Mean squared error loss
-    """
-    def forward(self, prediction, labels):
-        """
-        Args:
-            prediction: prediction of the network
-            labels: correct labels
-        Returns:
-            Mean squared error
-        """
-        return F.mse_loss(prediction, labels)

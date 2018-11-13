@@ -33,7 +33,7 @@ class ConvLayer(nn.Module):
         self.stride = stride
 
         if preserve_size:   # Does not work for stride > 1
-            padding = (((kernel_size + 1) / 2) - 1) * dilation
+            padding = int((((kernel_size + 1) / 2) - 1) * dilation)
 
         self.padding = padding
         self.dilation = dilation
@@ -156,7 +156,7 @@ class GatedConvLayer(nn.Module):
         self.stride = stride
 
         if preserve_size:   # Does not work for stride > 1
-            padding = (((kernel_size + 1) / 2) - 1) * dilation
+            padding = int((((kernel_size + 1) / 2) - 1) * dilation)
 
         self.padding = padding
         self.dilation = dilation
