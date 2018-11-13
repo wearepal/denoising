@@ -105,13 +105,16 @@ def validate(args, val_loader, model, criterion, training_iters, summary_writer)
                 end = time.time()
 
                 # TODO: Make robust to smaller batch sizes
-                if args.test_batch_size >= 20:
+                if args.test_batch_size >= 24:
                     if i == 0:
                         summary_writer.add_image(
-                            'denoised', vutils.make_grid(denoised.data[:20], normalize=True,
-                                                         scale_each=True), training_iters)
+                            'noisy_images', vutils.make_grid(noisy.data[:24], normalize=True,
+                                                             scale_each=True), training_iters)
                         summary_writer.add_image(
-                            'clean_images', vutils.make_grid(clean.data[:20], normalize=True,
+                            'denoised_images', vutils.make_grid(denoised.data[:24], normalize=True,
+                                                                scale_each=True), training_iters)
+                        summary_writer.add_image(
+                            'clean_images', vutils.make_grid(clean.data[:24], normalize=True,
                                                              scale_each=True), training_iters)
 
                 # Update progress bar
