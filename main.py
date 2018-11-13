@@ -38,15 +38,15 @@ def parse_arguments():
 
     parser.add_argument('--epochs', default=100, type=int, metavar='N',
                         help='number of total epochs to run')
-    parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
+    parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
                         help='manual epoch number (useful on restarts)')
 
-    parser.add_argument('-trb', '--train_batch-size', default=256, type=int,
+    parser.add_argument('-trb', '--train_batch_size', default=256, type=int,
                         metavar='N', help='mini-batch size for training data (default: 256)')
-    parser.add_argument('-teb', '--test_batch-size', default=256, type=int,
+    parser.add_argument('-teb', '--test_batch_size', default=256, type=int,
                         metavar='N', help='mini-batch size for test data (default: 1)')
 
-    parser.add_argument('--lr', '--learning-rate', default=0.005, type=float,
+    parser.add_argument('-lr', '--learning_rate', default=0.005, type=float,
                         metavar='LR', help='initial learning rate (default: 0.005)')
     parser.add_argument('--loss', type=str, default='MSELoss')
     parser.add_argument('--model', type=str, default='SimpleCNN')
@@ -126,7 +126,7 @@ def main(args):
     # construct network from args
     model = getattr(models, args.model)(args)
     model = model.cuda() if args.cuda else model
-    optimizer = getattr(torch.optim, args.optim)(model.parameters(), lr=args.lr)
+    optimizer = getattr(torch.optim, args.optim)(model.parameters(), lr=args.learning_rate)
     criterion = getattr(loss, args.loss)()
     criterion = criterion.cuda() if args.cuda else criterion
 
