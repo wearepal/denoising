@@ -160,8 +160,8 @@ def evaluate_psnr_ssim(args, model, data_loader):
 
                 # Denoise the image and calculate the loss wrt target clean image
                 denoised = model(noisy, iso)
-                psnr = psnr_calculator(denoised, clean)
-                ssim = ssim_calculator(denoised, clean)
+                psnr = psnr_calculator(denoised, clean).mean()
+                ssim = ssim_calculator(denoised, clean).mean()
 
                 # Update meters
                 psnr_meter.add(psnr.item())
