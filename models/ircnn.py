@@ -3,9 +3,9 @@ import torch.nn as nn
 from models import ConvLayer
 
 
-class IRNN(nn.Module):
+class IRCNN(nn.Module):
     """
-    Image restoration CNN (IRNN) from 'Learning Deep CNN Denoiser Prior for Image Restoration'
+    Image restoration CNN (IRCNN) from 'Learning Deep CNN Denoiser Prior for Image Restoration'
     https://arxiv.org/pdf/1704.03264.pdf
     """
     def __init__(self, args):
