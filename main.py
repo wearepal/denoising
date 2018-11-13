@@ -15,105 +15,107 @@ from optimisation import loss
 from utils import TransformedHuaweiDataset
 import models
 
-parser = argparse.ArgumentParser()
 
-parser.add_argument('-dd', '--data_dir', help='location of transformed data')
-parser.add_argument('-ts', '--test_split', help='Fraction of data to be used for validation',
-                    default=0.2, type=float)
-parser.add_argument('-ds', '--data_subset', help='Fraction of crops per image to be used',
-                    default=1.0, type=float)
+def parse_arguments():
+    parser = argparse.ArgumentParser()
 
-parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
-                    help='number of data loading workers (default: 4)')
+    parser.add_argument('-dd', '--data_dir', help='location of transformed data')
+    parser.add_argument('-ts', '--test_split', help='Fraction of data to be used for validation',
+                        default=0.2, type=float)
+    parser.add_argument('-ds', '--data_subset', help='Fraction of crops per image to be used',
+                        default=1.0, type=float)
 
-parser.add_argument('-nc', '--no_cuda', action='store_true', default=False,
-                    help='disables CUDA training')
+    parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
+                        help='number of data loading workers (default: 4)')
 
-parser.add_argument('--manual_seed', type=int, help='manual seed, if not given resorts to random seed.')
+    parser.add_argument('-nc', '--no_cuda', action='store_true', default=False,
+                        help='disables CUDA training')
 
-parser.add_argument('-sd', '--save_dir', type=str, metavar='PATH', default='',
-                    help='path to save results and checkpoints to (default: ../results/<model>/<current timestamp>)')
+    parser.add_argument('--manual_seed', type=int, help='manual seed, if not given resorts to random seed.')
 
-parser.add_argument('--epochs', default=100, type=int, metavar='N',
-                    help='number of total epochs to run')
-parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
-                    help='manual epoch number (useful on restarts)')
+    parser.add_argument('-sd', '--save_dir', type=str, metavar='PATH', default='',
+                        help='path to save results and checkpoints to (default: ../results/<model>/<current timestamp>)')
 
-parser.add_argument('-trb', '--train_batch-size', default=256, type=int,
-                    metavar='N', help='mini-batch size for training data (default: 256)')
-parser.add_argument('-teb', '--test_batch-size', default=256, type=int,
-                    metavar='N', help='mini-batch size for test data (default: 1)')
+    parser.add_argument('--epochs', default=100, type=int, metavar='N',
+                        help='number of total epochs to run')
+    parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
+                        help='manual epoch number (useful on restarts)')
 
-parser.add_argument('--lr', '--learning-rate', default=0.005, type=float,
-                    metavar='LR', help='initial learning rate (default: 0.005)')
-parser.add_argument('--loss', type=str, default='MSELoss')
-parser.add_argument('--model', type=str, default='SimpleCNN')
-parser.add_argument('--optim', type=str, default='Adam')
+    parser.add_argument('-trb', '--train_batch-size', default=256, type=int,
+                        metavar='N', help='mini-batch size for training data (default: 256)')
+    parser.add_argument('-teb', '--test_batch-size', default=256, type=int,
+                        metavar='N', help='mini-batch size for test data (default: 1)')
 
-parser.add_argument('--resume', metavar='PATH', help='load from a path to a saved checkpoint')
-parser.add_argument('--evaluate', action='store_true',
-                    help='evaluate model on validation set (default: false)')
+    parser.add_argument('--lr', '--learning-rate', default=0.005, type=float,
+                        metavar='LR', help='initial learning rate (default: 0.005)')
+    parser.add_argument('--loss', type=str, default='MSELoss')
+    parser.add_argument('--model', type=str, default='SimpleCNN')
+    parser.add_argument('--optim', type=str, default='Adam')
 
-# gpu/cpu
-parser.add_argument('--gpu_num', type=int, default=0, metavar='GPU', help='choose GPU to run on.')
+    parser.add_argument('--resume', metavar='PATH', help='load from a path to a saved checkpoint')
+    parser.add_argument('--evaluate', action='store_true',
+                        help='evaluate model on validation set (default: false)')
 
-# CNN
-parser.add_argument('--cnn_in_channels', type=int, default=3)
-parser.add_argument('--cnn_hidden_channels', type=int, default=32)
-parser.add_argument('--cnn_num_hidden_layers', type=int, default=7)
-parser.add_argument('-ln', '--learn_noise', action='store_true', default=False,
-                    help='learn noise as a residual')
-parser.add_argument('-ni', '--no_iso', action='store_true', default=False,
-                    help='not to use image ISO values as extra conditioning data')
+    # gpu/cpu
+    parser.add_argument('--gpu_num', type=int, default=0, metavar='GPU', help='choose GPU to run on.')
 
-args = parser.parse_args()
-args.cuda = not args.no_cuda and torch.cuda.is_available()
-args.iso = not args.no_iso
+    # CNN
+    parser.add_argument('--cnn_in_channels', type=int, default=3)
+    parser.add_argument('--cnn_hidden_channels', type=int, default=32)
+    parser.add_argument('--cnn_num_hidden_layers', type=int, default=7)
+    parser.add_argument('-ln', '--learn_noise', action='store_true', default=False,
+                        help='learn noise as a residual')
+    parser.add_argument('-ni', '--no_iso', action='store_true', default=False,
+                        help='not to use image ISO values as extra conditioning data')
 
-# Random seeding
-if args.manual_seed is None:
-    args.manual_seed = random.randint(1, 100000)
-random.seed(args.manual_seed)
-np.random.seed(args.manual_seed)
-torch.manual_seed(args.manual_seed)
-torch.cuda.manual_seed_all(args.manual_seed)
-
-if args.cuda:
-    # gpu device number
-    torch.cuda.set_device(args.gpu_num)
-
-# Create results path
-if args.save_dir: # If specified
-    save_path = Path(args.save_dir).resolve()
-else:
-    save_path = Path().resolve().parent / "results" / args.model / str(round(time.time()))
-    save_path.parent.mkdir(exist_ok=True)
-save_path.mkdir() # Will throw an exception if the path exists OR the parent path _doesn't_
-
-kwargs = {'pin_memory': True} if args.cuda else {}
-
-# Define transforms:
-noisy_transforms = transforms.Compose(
-    [transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-        ])
-
-clean_transforms = transforms.Compose(
-    [transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-        ])
+    return parser.parse_args()
 
 
-def transform_sample(sample):
-    transformed_sample = {
-        'clean': clean_transforms(sample['clean']),
-        'noisy': noisy_transforms(sample['noisy']),
-        'iso': (sample['iso'] - 1215.32) / 958.59   # (x - mean) / std
-    }
-    return transformed_sample
+def main(args):
+    args.cuda = not args.no_cuda and torch.cuda.is_available()
+    args.iso = not args.no_iso
 
+    # Random seeding
+    if args.manual_seed is None:
+        args.manual_seed = random.randint(1, 100000)
+    random.seed(args.manual_seed)
+    np.random.seed(args.manual_seed)
+    torch.manual_seed(args.manual_seed)
+    torch.cuda.manual_seed_all(args.manual_seed)
 
-def main(args, kwargs):
+    if args.cuda:
+        # gpu device number
+        torch.cuda.set_device(args.gpu_num)
+
+    # Create results path
+    if args.save_dir: # If specified
+        save_path = Path(args.save_dir).resolve()
+    else:
+        save_path = Path().resolve().parent / "results" / args.model / str(round(time.time()))
+        save_path.parent.mkdir(exist_ok=True)
+    save_path.mkdir() # Will throw an exception if the path exists OR the parent path _doesn't_
+
+    kwargs = {'pin_memory': True} if args.cuda else {}
+
+    # Define transforms:
+    noisy_transforms = transforms.Compose(
+        [transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+            ])
+
+    clean_transforms = transforms.Compose(
+        [transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+            ])
+
+    def _transform_sample(sample):
+        transformed_sample = {
+            'clean': clean_transforms(sample['clean']),
+            'noisy': noisy_transforms(sample['noisy']),
+            'iso': (sample['iso'] - 1215.32) / 958.59   # (x - mean) / std
+        }
+        return transformed_sample
+
     print('\nMODEL SETTINGS: \n', args, '\n')
     print("Random Seed: ", args.manual_seed)
 
@@ -128,7 +130,7 @@ def main(args, kwargs):
     criterion = getattr(loss, args.loss)()
     criterion = criterion.cuda() if args.cuda else criterion
 
-    dataset = TransformedHuaweiDataset(root_dir=args.data_dir, transform=transform_sample)
+    dataset = TransformedHuaweiDataset(root_dir=args.data_dir, transform=_transform_sample)
     train_dataset, val_dataset = dataset.random_split(test_ratio=args.test_split,
                                                       data_subset=args.data_subset)
 
@@ -177,13 +179,13 @@ def main(args, kwargs):
             'optimizer': optimizer.state_dict(),
             'best_loss': best_loss
         }
-        save_checkpoint(checkpoint, model_filename, is_best)
+        save_checkpoint(checkpoint, model_filename, is_best, save_path)
 
     # Evaluate model using PSNR and SSIM metrics
     evaluate_psnr_ssim(args, model, val_loader)
 
 
-def save_checkpoint(checkpoint, filename, is_best):
+def save_checkpoint(checkpoint, filename, is_best, save_path):
     print("===> Saving checkpoint '{}'".format(filename))
     model_filename = save_path / filename
     best_filename = save_path / 'model_best.pth.tar'
@@ -194,4 +196,4 @@ def save_checkpoint(checkpoint, filename, is_best):
 
 
 if __name__ == '__main__':
-    main(args, kwargs)
+    main(parse_arguments())
