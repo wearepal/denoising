@@ -16,7 +16,7 @@ from utils import TransformedHuaweiDataset
 import models
 
 
-def parse_arguments():
+def parse_arguments(raw_args=None):
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-dd', '--data_dir', help='location of transformed data')
@@ -68,7 +68,7 @@ def parse_arguments():
     parser.add_argument('-ni', '--no_iso', action='store_true', default=False,
                         help='not to use image ISO values as extra conditioning data')
 
-    return parser.parse_args()
+    return parser.parse_args(raw_args)
 
 
 def main(args):
