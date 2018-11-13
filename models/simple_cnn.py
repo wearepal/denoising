@@ -22,7 +22,7 @@ class SimpleCNN(nn.Module):
 
         self.model = nn.Sequential(*layers)
         self.tanh = nn.Tanh()
-        self.residual = args.learn_noise
+        self.residual = not args.interpolate
 
     def forward(self, x, c=None):
         out = self.tanh(self.model(x))
@@ -51,7 +51,7 @@ class SimpleGatedCNN(nn.Module):
         self.model = nn.ModuleList(layers)
         self.tanh = nn.Tanh()
 
-        self.residual = args.learn_noise
+        self.residual = not args.interpolate
 
     def forward(self, x, c=None):
         out = x
