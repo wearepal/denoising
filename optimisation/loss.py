@@ -1,7 +1,6 @@
 import torchvision
 import torch.nn as nn
 from torch.nn import MSELoss
-from torch.nn import functional as F
 from utils.metrics import *
 
 
@@ -21,11 +20,20 @@ class VGGLoss(nn.Module):
     the euclidean distance between the feature representations
      of a reconstructed image.
     """
-    def __init__(self, feature_layer=11):
+    def __init__(self, prefactor=0.006, feature_layer=11):
+        """
+        Args:
+            prefactor: prefactor by which to scale the loss.
+            Rescaling by a factor of 1 / 12.75 gives VGG losses of a scale that
+            is comparable to MSE loss. This is equivalent to multiplying with a
+            rescaling factor of ≈ 0.006.
+            feature_layer: VGG19 layer number from which to extract features
+        """
         super().__init__()
         vgg = torchvision.models.vgg19(pretrained=True)
         self.criterion = nn.MSELoss()
         self.feature_extractor = _FeatureExtractor(vgg, feature_layer=feature_layer)
+        self.prefactor = prefactor
 
     def forward(self, fake, real):
         """
@@ -37,7 +45,7 @@ class VGGLoss(nn.Module):
         """
         real_features = self.feature_extractor(real).detach()
         fake_features = self.feature_extractor(fake)
-        return self.criterion(fake_features, real_features)
+        return self.prefactor * self.criterion(fake_features, real_features)
 
 
 class WassersteinLossGAN(nn.Module):

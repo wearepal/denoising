@@ -37,14 +37,14 @@ def parse_arguments(raw_args=None):
                         help='path to save results and checkpoints to (default: ../results/<model>/<current timestamp>)')
 
     parser.add_argument('--epochs', default=100, type=int, metavar='N',
-                        help='number of total epochs to run')
+                        help='number of total epochs to run (default: 100)')
     parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
                         help='manual epoch number (useful on restarts)')
 
     parser.add_argument('-trb', '--train_batch_size', default=256, type=int,
                         metavar='N', help='mini-batch size for training data (default: 256)')
     parser.add_argument('-teb', '--test_batch_size', default=256, type=int,
-                        metavar='N', help='mini-batch size for test data (default: 1)')
+                        metavar='N', help='mini-batch size for test data (default: 256)')
 
     parser.add_argument('-lr', '--learning_rate', default=0.005, type=float,
                         metavar='LR', help='initial learning rate (default: 0.005)')
@@ -101,12 +101,12 @@ def main(args):
     noisy_transforms = transforms.Compose(
         [transforms.ToTensor(),
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-            ])
+         ])
 
     clean_transforms = transforms.Compose(
         [transforms.ToTensor(),
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-            ])
+         ])
 
     def _transform_sample(sample):
         transformed_sample = {

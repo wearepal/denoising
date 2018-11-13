@@ -59,7 +59,7 @@ class GatedConv2d(nn.Module):
     Gated convolutional layer.
     Image ISO values can be used as extra conditioning data.
     If we want to use conditioning data that takes the form of a vector
-    or coordinate map, a linear and convolutional layer, respectively would
+    or coordinate map, a linear and convolutional layer, respectively, would
     need to be used for the biases.
     """
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, dilation=1,
@@ -95,7 +95,7 @@ class GatedConv2d(nn.Module):
 
         if self.residual:
             self.downsample = None
-            if stride != 1 or in_channels != out_channels:
+            if stride != 1 or in_channels != out_channels:  # Maybe externalize this to GatedConvLayer
                 self.downsample = nn.Sequential(
                     nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride),
                 )
@@ -219,7 +219,7 @@ class GatedConvTranspose2d(nn.Module):
 
         if self.residual:
             self.upsample = None
-            if stride != 1 or in_channels != out_channels:
+            if stride != 1 or in_channels != out_channels:  # Maybe externalize
                 self.upsample = nn.Sequential(
                     nn.ConvTranspose2d(in_channels, out_channels, kernel_size=1, stride=stride),
                 )
@@ -340,7 +340,7 @@ class GatedResidualBLock(nn.Module):
         if stride != 1 or in_channels != out_channels:
             self.downsample = nn.Sequential(
                 nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride),
-                nn.BatchNorm2d(out_channels)
+                norm(num_norm_groups, out_channels)
             )
 
         self.stride = stride
