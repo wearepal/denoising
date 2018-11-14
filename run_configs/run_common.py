@@ -1,8 +1,8 @@
 import sys
+from pathlib import Path
 
-# try different ways to import main.py; it's difficult because main.py is in the parent directory
-sys.path.append('.')
-sys.path.append('..')
+# we need to import main.py from the parent directory
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 from main import main, parse_arguments
 
 
