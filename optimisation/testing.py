@@ -21,6 +21,8 @@ def test(args, sample_transform):
         # in a folder by the same name
         save_path = model_path.parent / model_path.name.split(".")[0]
 
+    save_path.mkdir(parents=True)
+
     print('==> Loading checkpoint for testing')
     checkpoint = torch.load(model_path)
     print('==> Checkpoint loaded')
