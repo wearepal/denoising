@@ -102,18 +102,18 @@ def _transform_sample(sample):
 
 
 def main(args):
-    if args.run_on_test:
-        test(args, _transform_sample)
-
     random.seed(args.manual_seed)
     np.random.seed(args.manual_seed)
     torch.manual_seed(args.manual_seed)
-    torch.cuda.manual_seed_all(args.manual_seed)
-
+    torch.cuda.manual_seed_all(args.manual_seed)    
     if args.cuda:
         # gpu device number
         torch.cuda.set_device(args.gpu_num)
 
+    if args.run_on_test:
+        test(args, _transform_sample)
+        return
+    
     # Create results path
     if args.save_dir: # If specified
         save_path = Path(args.save_dir).resolve()
