@@ -1,10 +1,13 @@
 from tqdm import tqdm
 from utils.loader import TestDataset
 from torch.utils.data import DataLoader
-from torchvision import transforms
 from pathlib import Path
 import torch
 import models
+import torch
+import torchvision.transforms.functional as F
+a = torch.FloatTensor(1, height, width)
+a = F.to_pil_image(a)
 
 convert_to_pil = transforms.Compose([transforms.ToPILImage()])
 
@@ -40,6 +43,5 @@ def test(args, sample_transform):
         iso = iso.cuda() if args.cuda else iso
 
         denoised = model(noisy, iso)
-
-        im = convert_to_pil(denoised)
+        im = convert_to_pil(torch.squeeze(denoised))
         im.save(save_path / f"Test_Image_{img_no}.png")
