@@ -1,3 +1,3 @@
-import os
+from pathlib import Path
 
-ROOT_DIR: str = os.path.abspath(os.path.join(os.path.abspath(__file__), os.pardir))
+ROOT_DIR: str = Path(__file__).resolve().parent.parent
