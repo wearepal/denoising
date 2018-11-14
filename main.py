@@ -68,16 +68,17 @@ def parse_arguments(raw_args=None):
     parser.add_argument('-ni', '--no_iso', action='store_true', default=False,
                         help='not to use image ISO values as extra conditioning data')
 
-    return parser.parse_args(raw_args)
-
-
-def main(args):
+    args = parser.parse_args(raw_args)
     args.cuda = not args.no_cuda and torch.cuda.is_available()
     args.iso = not args.no_iso
 
     # Random seeding
     if args.manual_seed is None:
         args.manual_seed = random.randint(1, 100000)
+    return args
+
+
+def main(args):
     random.seed(args.manual_seed)
     np.random.seed(args.manual_seed)
     torch.manual_seed(args.manual_seed)
