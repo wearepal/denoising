@@ -126,6 +126,38 @@ class HuaweiDataset(Dataset):
         return clean_location, noisy_location
 
 
+class TestDataset(Dataset):
+    """Load test data with ISO information"""
+    def __init__(self, folder_path, transform=None):
+        """
+        Args:
+            folder_path (str): path to folder containing `Testing_Info.csv` and `Testing_Data` dir
+            transform (callable, optional): optional transformation function
+        """
+        self.info_df = pd.read_csv(Path(folder_path).resolve() / "Testing_Info.csv", skiprows=1)
+        self.image_folder = Path(folder_path).resolve() / "Testing_Data"
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.info_df)
+
+    def __getitem__(self, idx):
+        if idx > len(self.info_df):
+            raise IndexError
+        noisy_image = Image.open(self.image_folder / self.info_df.iloc[idx]['Name_Info'])
+        iso = self.info_df.iloc[idx]['ISO_Info']
+        sample = {
+            'noisy': noisy_image,
+            'iso': iso,
+            'class': self.info_df.iloc[idx]['Class_Info']
+        }
+
+        if self.transform is not None:
+            sample = self.transform(sample)
+
+        return sample
+
+
 class CsvLoader(Dataset):
     """Load dataset with information from CSV file"""
     def __init__(self, csv_path):

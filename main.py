@@ -109,12 +109,13 @@ def main(args):
          ])
 
     def _transform_sample(sample):
+        """Transformation for sample dict, should be used for test data as well as train"""
         transformed_sample = {
-            'clean': clean_transforms(sample['clean']),
+            'clean': clean_transforms(sample['clean']) if 'clean' in sample else None,
             'noisy': noisy_transforms(sample['noisy']),
             'iso': torch.FloatTensor([(sample['iso'] - 1215.32) / 958.13])   # (x - mean) / std
         }
-        return transformed_sample
+        return {k:v for k,v in transformed_sample.items() if v is not None}
 
     print('\nMODEL SETTINGS: \n', args, '\n')
     print("Random Seed: ", args.manual_seed)
