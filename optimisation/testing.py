@@ -6,6 +6,8 @@ from pathlib import Path
 import torch
 import models
 
+convert_to_pil = transforms.Compose([transforms.ToPILImage()])
+
 def test(args, sample_transform):
     model_path = Path(args.run_on_test[0]).resolve()
     if model_path.is_file():
@@ -39,5 +41,5 @@ def test(args, sample_transform):
 
         denoised = model(noisy, iso)
 
-        im = transforms.ToPILImage(denoised)
+        im = convert_to_pil(denoised)
         im.save(save_path / f"Test_Image_{img_no}.png")
