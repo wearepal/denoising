@@ -6,10 +6,6 @@ import torch
 import models
 import torch
 import torchvision.transforms.functional as F
-a = torch.FloatTensor(1, height, width)
-a = F.to_pil_image(a)
-
-convert_to_pil = transforms.Compose([transforms.ToPILImage()])
 
 def test(args, sample_transform):
     model_path = Path(args.run_on_test[0]).resolve()
@@ -43,5 +39,5 @@ def test(args, sample_transform):
         iso = iso.cuda() if args.cuda else iso
 
         denoised = model(noisy, iso)
-        im = convert_to_pil(torch.squeeze(denoised))
+        im = F.to_pil_image(torch.squeeze(denoised))
         im.save(save_path / f"Test_Image_{img_no}.png")
