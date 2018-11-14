@@ -51,6 +51,8 @@ def parse_arguments(raw_args=None):
     parser.add_argument('--loss', type=str, default='MSELoss')
     parser.add_argument('--model', type=str, default='SimpleCNN')
     parser.add_argument('--optim', type=str, default='Adam')
+    parser.add_argument('--args_to_loss', action='store_true', default=False,
+                        help='whether to pass the commandline arguments to the loss function')
 
     parser.add_argument('--resume', metavar='PATH', help='load from a path to a saved checkpoint')
     parser.add_argument('--evaluate', action='store_true',
@@ -128,7 +130,8 @@ def main(args):
     model = getattr(models, args.model)(args)
     model = model.cuda() if args.cuda else model
     optimizer = getattr(torch.optim, args.optim)(model.parameters(), lr=args.learning_rate)
-    criterion = getattr(loss, args.loss)()
+    criterion_constructor = getattr(loss, args.loss)
+    criterion = criterion_constructor(args) if args.args_to_loss else criterion_constructor()
     criterion = criterion.cuda() if args.cuda else criterion
 
     dataset = TransformedHuaweiDataset(root_dir=args.data_dir, transform=_transform_sample)
