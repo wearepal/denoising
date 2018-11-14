@@ -75,6 +75,10 @@ def parse_arguments(raw_args=None):
     args = parser.parse_args(raw_args)
     args.cuda = not args.no_cuda and torch.cuda.is_available()
     args.iso = not args.no_iso
+
+    if args.manual_seed is None:
+        args.manual_seed = random.randint(1, 100000)
+
     return args
 
 
@@ -101,13 +105,6 @@ def main(args):
     if args.run_on_test:
         test(args, _transform_sample)
 
-    # Random seeding
-    if args.manual_seed is None:
-        args.manual_seed = random.randint(1, 100000)
-    return args
-
-
-def main(args):
     random.seed(args.manual_seed)
     np.random.seed(args.manual_seed)
     torch.manual_seed(args.manual_seed)
