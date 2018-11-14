@@ -2,7 +2,7 @@ import numpy as np
 from skimage import io, measure, color
 import torch
 
-from common import ROOT_DIR
+from tests.common import ROOT_DIR
 from utils.metrics import SSIM, PSNR
 
 RTOL = 1e-7
