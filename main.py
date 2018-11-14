@@ -11,6 +11,7 @@ from tensorboardX import SummaryWriter
 from torchvision import transforms
 
 from optimisation.training import train, validate, evaluate_psnr_ssim
+from optimisation.testing import test
 from optimisation import loss
 from utils import TransformedHuaweiDataset
 import models
@@ -18,6 +19,10 @@ import models
 
 def parse_arguments(raw_args=None):
     parser = argparse.ArgumentParser()
+
+    parser.add_argument('-t', '--run_on_test', nargs='+',
+                        help='Evaluate a model (checkpoint) on test set. '
+                        'Args: Checkpoint path, Test data path[, Save path]')
 
     parser.add_argument('-dd', '--data_dir', help='location of transformed data')
     parser.add_argument('-ts', '--test_split', help='Fraction of data to be used for validation',
@@ -67,13 +72,34 @@ def parse_arguments(raw_args=None):
                         help='interpolate rather than learn noise as an image residual')
     parser.add_argument('-ni', '--no_iso', action='store_true', default=False,
                         help='not to use image ISO values as extra conditioning data')
+    args = parser.parse_args(raw_args)
+    args.cuda = not args.no_cuda and torch.cuda.is_available()
+    args.iso = not args.no_iso
+    return args
 
-    return parser.parse_args(raw_args)
+
+def _transform_sample(sample):
+        """Transformation for sample dict, should be used for test data as well as train"""
+        # Define transforms:
+        noisy_transforms = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ])
+        clean_transforms = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ])
+        transformed_sample = {
+            'clean': clean_transforms(sample['clean']) if 'clean' in sample else None,
+            'noisy': noisy_transforms(sample['noisy']),
+            'iso': torch.FloatTensor([(sample['iso'] - 1215.32) / 958.13])   # (x - mean) / std
+        }
+        return {k:v for k,v in transformed_sample.items() if v is not None}
 
 
 def main(args):
-    args.cuda = not args.no_cuda and torch.cuda.is_available()
-    args.iso = not args.no_iso
+    if args.run_on_test:
+        test(args, _transform_sample)
 
     # Random seeding
     if args.manual_seed is None:
@@ -96,26 +122,6 @@ def main(args):
     save_path.mkdir() # Will throw an exception if the path exists OR the parent path _doesn't_
 
     kwargs = {'pin_memory': True} if args.cuda else {}
-
-    # Define transforms:
-    noisy_transforms = transforms.Compose(
-        [transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-         ])
-
-    clean_transforms = transforms.Compose(
-        [transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-         ])
-
-    def _transform_sample(sample):
-        """Transformation for sample dict, should be used for test data as well as train"""
-        transformed_sample = {
-            'clean': clean_transforms(sample['clean']) if 'clean' in sample else None,
-            'noisy': noisy_transforms(sample['noisy']),
-            'iso': torch.FloatTensor([(sample['iso'] - 1215.32) / 958.13])   # (x - mean) / std
-        }
-        return {k:v for k,v in transformed_sample.items() if v is not None}
 
     print('\nMODEL SETTINGS: \n', args, '\n')
     print("Random Seed: ", args.manual_seed)
