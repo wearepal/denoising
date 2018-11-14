@@ -41,5 +41,6 @@ def test(args, sample_transform):
             iso = iso.cuda() if args.cuda else iso
 
             denoised = model(noisy, iso)
+            denoised = denoised.cpu()
             im = F.to_pil_image(torch.squeeze(denoised))
             im.save(save_path / f"Test_Image_{img_no}.png")
