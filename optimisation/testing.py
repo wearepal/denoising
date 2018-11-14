@@ -1,7 +1,7 @@
 from tqdm import tqdm
 from utils.loader import TestDataset
 from torch.utils.data import DataLoader
-from PIL import Image
+from torchvision import transforms
 from pathlib import Path
 import torch
 import models
@@ -39,5 +39,5 @@ def test(args, sample_transform):
 
         denoised = model(noisy, iso)
 
-        im = Image.fromarray(denoised)
+        im = transforms.ToPILImage(denoised)
         im.save(save_path / f"Test_Image_{img_no}.png")
