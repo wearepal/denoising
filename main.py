@@ -70,6 +70,10 @@ def parse_arguments(raw_args=None):
     parser.add_argument('-ni', '--no_iso', action='store_true', default=False,
                         help='not to use image ISO values as extra conditioning data')
 
+    # VGG loss
+    parser.add_argument('--vgg_feature_layer', type=int, default=11,
+                        help='VGG19 layer number from which to extract features')
+
     args = parser.parse_args(raw_args)
     args.cuda = not args.no_cuda and torch.cuda.is_available()
     args.iso = not args.no_iso
