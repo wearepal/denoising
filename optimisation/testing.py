@@ -32,12 +32,14 @@ def test(args, sample_transform):
     test_dataset = TestDataset(args.run_on_test[1], transform=sample_transform)
     test_loader = DataLoader(test_dataset, num_workers=args.workers, pin_memory=args.cuda)
 
-    for img_no, sample in enumerate(tqdm(test_loader)):
-        noisy = sample['noisy']
-        noisy = noisy.cuda() if args.cuda else noisy
-        iso = sample['iso']
-        iso = iso.cuda() if args.cuda else iso
 
-        denoised = model(noisy, iso)
-        im = F.to_pil_image(torch.squeeze(denoised))
-        im.save(save_path / f"Test_Image_{img_no}.png")
+    with torch.no_grad():
+        for img_no, sample in enumerate(tqdm(test_loader)):
+            noisy = sample['noisy']
+            noisy = noisy.cuda() if args.cuda else noisy
+            iso = sample['iso']
+            iso = iso.cuda() if args.cuda else iso
+
+            denoised = model(noisy, iso)
+            im = F.to_pil_image(torch.squeeze(denoised))
+            im.save(save_path / f"Test_Image_{img_no}.png")
