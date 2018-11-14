@@ -2,6 +2,7 @@ from tqdm import tqdm
 from utils.loader import TestDataset
 from torch.utils.data import DataLoader
 from PIL import Image
+from pathlib import Path
 
 def test(args, sample_transform):
     model_path = Path(args.run_on_test[0]).resolve()
@@ -26,7 +27,7 @@ def test(args, sample_transform):
     model.eval()
 
     test_dataset = TestDataset(args.run_on_test[1], transform=sample_transform)
-    test_loader = DataLoader(test_dataset, num_workers=args.worers, pin_memory=args.cuda)
+    test_loader = DataLoader(test_dataset, num_workers=args.workers, pin_memory=args.cuda)
 
     for img_no, sample in tqdm(test_loader):
         noisy = sample['noisy']
