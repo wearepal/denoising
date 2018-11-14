@@ -4,6 +4,7 @@ from torch.utils.data import DataLoader
 from PIL import Image
 from pathlib import Path
 import torch
+import models
 
 def test(args, sample_transform):
     model_path = Path(args.run_on_test[0]).resolve()
