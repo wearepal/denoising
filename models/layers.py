@@ -13,17 +13,22 @@ class Identity(nn.Module):
         return x
 
 
-def norm(num_norm_groups, num_channels):
-    if num_norm_groups > 0:
-        return nn.GroupNorm(num_groups=num_norm_groups, num_channels=num_channels)
+def norm(num_channels, num_norm_groups, num_classes=0):
+
+    if num_classes > 1:
+        return ConditionalNorm(num_features=num_channels, num_classes=num_classes,
+                               num_groups=num_norm_groups)
+    elif num_norm_groups > 0:
+        return nn.GroupNorm(num_channels=num_channels, num_groups=num_norm_groups)
     else:
-        return nn.BatchNorm2d(num_channels)
+        return nn.BatchNorm2d(num_features=num_channels)
 
 
 class ConvLayer(nn.Module):
 
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, dilation=1,
-                 layer_activation=nn.ReLU(inplace=True), num_norm_groups=0, normalize=True,
+                 layer_activation=nn.ReLU(inplace=True), num_norm_groups=0, num_classes=0,
+                 normalize=True,
                  preserve_size=False):
         super().__init__()
 
@@ -38,16 +43,17 @@ class ConvLayer(nn.Module):
         self.padding = padding
         self.dilation = dilation
         self.num_norm_groups = num_norm_groups
+        self.conditional_norm = num_classes > 1
         self.preserve_size = preserve_size
 
         self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, dilation, bias=normalize)
-        self.norm = norm(num_norm_groups, out_channels) if normalize else None
+        self.norm = norm(out_channels, num_norm_groups, num_classes) if normalize else None
         self.layer_activation = layer_activation
 
-    def forward(self, x):
+    def forward(self, x, class_labels=None):
         out = self.conv(x)
         if self.norm is not None:
-            out = self.norm(out)
+            out = self.norm(out, class_labels) if self.conditional_norm else self.norm(out)
         if self.layer_activation is not None:
             out = self.layer_activation(out)
 
@@ -147,7 +153,8 @@ class GatedConvLayer(nn.Module):
 
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, dilation=1,
                  conv_activation=None, layer_activation=nn.ReLU(inplace=True), local_condition=False,
-                 conv_residual=True, num_norm_groups=0, normalize=True, preserve_size=False):
+                 conv_residual=True, num_norm_groups=0, num_classes=0,
+                 normalize=True, preserve_size=False):
         super().__init__()
 
         self.in_channels = in_channels
@@ -164,17 +171,19 @@ class GatedConvLayer(nn.Module):
         self.local_condition = local_condition
         self.conv_residual = conv_residual
         self.num_norm_groups = num_norm_groups
+        self.num_classes = num_classes
+        self.conditional_norm = num_classes > 1
         self.preserve_size = preserve_size
 
         self.conv = GatedConv2d(in_channels, out_channels, kernel_size, stride, padding, dilation,
                                 conv_activation, local_condition, conv_residual)
-        self.norm = norm(num_norm_groups, out_channels) if normalize else None
+        self.norm = norm(out_channels, num_norm_groups, num_classes) if normalize else None
         self.layer_activation = layer_activation
 
-    def forward(self, x, c=None):
+    def forward(self, x, c=None, class_labels=None):
         out = self.conv(x, c)
         if self.norm is not None:
-            out = self.norm(out)
+            out = self.norm(out, class_labels) if self.conditional_norm else self.norm(out)
         if self.layer_activation is not None:
             out = self.layer_activation(out)
 
@@ -270,18 +279,18 @@ class GatedConvTranspose2d(nn.Module):
 class ResidualBLock(nn.Module):
 
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1,
-                 dilation=(1, 1), residual=True, num_norm_groups=0):
+                 dilation=(1, 1), residual=True, num_norm_groups=0, num_classes=0):
         super().__init__()
 
         conv1_padding = padding * dilation[0]    # ensure the dilation does not affect the output size
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, stride=stride,
                                padding=conv1_padding, dilation=dilation[0], bias=False)
-        self.norm1 = norm(num_norm_groups, out_channels)
+        self.norm1 = norm(out_channels, num_norm_groups, num_classes)
 
         conv2_padding = padding * dilation[1]
         self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=kernel_size, stride=stride,
                                padding=conv2_padding, dilation=dilation[1], bias=False)
-        self.norm2 = norm(num_norm_groups, out_channels)
+        self.norm2 = norm(out_channels, num_norm_groups, num_classes)
 
         self.relu = nn.ReLU(inplace=True)
 
@@ -294,16 +303,17 @@ class ResidualBLock(nn.Module):
 
         self.stride = stride
         self.residual = residual
+        self.conditional_norm = num_classes > 1
 
-    def forward(self, x):
+    def forward(self, x, class_labels=None):
         residual = x
 
         out = self.conv1(x)
-        out = self.norm1(out)
+        out = self.norm1(out, class_labels) if self.conditional_norm else self.norm1(out)
         out = self.relu(out)
 
         out = self.conv2(out)
-        out = self.norm2(out)
+        out = self.norm2(out, class_labels) if self.conditional_norm else self.norm2(out)
 
         if self.residual:
             if self.downsample is not None:
@@ -319,20 +329,20 @@ class GatedResidualBLock(nn.Module):
 
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1,
                  dilation=(1, 1), residual=True, activation=None, local_condition=False,
-                 block_residual=True, num_norm_groups=0):
+                 block_residual=True, num_norm_groups=0, num_classes=0):
         super().__init__()
 
         conv1_padding = padding * dilation[0]    # ensure the dilation does not affect the output size
         self.conv1 = GatedConv2d(in_channels, out_channels, kernel_size=kernel_size, stride=stride,
                                  padding=conv1_padding, dilation=dilation[0], activation=activation,
                                  local_condition=local_condition, residual=block_residual)
-        self.norm1 = norm(num_norm_groups, out_channels)
+        self.norm1 = norm(out_channels, num_norm_groups, num_classes)
 
         conv2_padding = padding * dilation[1]
         self.conv2 = GatedConv2d(out_channels, out_channels, kernel_size=kernel_size, stride=stride,
                                  padding=conv2_padding, dilation=dilation[1], activation=activation,
                                  local_condition=local_condition, residual=block_residual)
-        self.norm2 = norm(num_norm_groups, out_channels)
+        self.norm2 = norm(out_channels, num_norm_groups, num_classes)
 
         self.relu = nn.ReLU()
 
@@ -345,16 +355,17 @@ class GatedResidualBLock(nn.Module):
 
         self.stride = stride
         self.residual = residual
+        self.conditional_norm = num_classes > 1
 
-    def forward(self, x, c=None):
+    def forward(self, x, c=None, class_labels=None):
         residual = x
 
         out = self.conv1(x, c)
-        out = self.norm1(out)
+        out = self.norm1(out, class_labels) if self.conditional_norm else self.norm1(out)
         out = self.relu(out)
 
         out = self.conv2(out, c)
-        out = self.norm2(out)
+        out = self.norm2(out, class_labels) if self.conditional_norm else self.norm2(out)
 
         if self.residual:
             if self.downsample is not None:
@@ -366,19 +377,24 @@ class GatedResidualBLock(nn.Module):
         return out
 
 
-class ConditionalBatchNorm2d(nn.Module):
+class ConditionalNorm(nn.Module):
 
-    def __init__(self, num_features, num_classes):
+    def __init__(self, num_features, num_classes, num_groups=0):
         super().__init__()
         self.num_features = num_features
-        self.bn = nn.BatchNorm2d(num_features, affine=False)
+
+        if num_groups > 0:
+            self.norm = nn.BatchNorm2d(num_features, affine=False)
+        else:
+            self.norm = nn.GroupNorm(num_channels=num_features, num_groups=num_groups, affine=False)
+
         self.embed = nn.Embedding(num_classes, num_features * 2)
         self.embed.weight.data[:, :num_features].normal_(1, 0.02)  # Initialise scale at N(1, 0.02)
         self.embed.weight.data[:, num_features:].zero_()    # Initialise bias at 0
 
-    def forward(self, x, y):
-        out = self.bn(x)
-        gamma, beta = self.embed(y).chunk(2, 1)
+    def forward(self, x, class_labels):
+        out = self.norm(x)
+        gamma, beta = self.embed(class_labels).chunk(2, 1)
         out = gamma.view(-1, self.num_features, 1, 1) * out + beta.view(-1, self.num_features, 1, 1)
 
         return out

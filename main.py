@@ -104,6 +104,10 @@ def main(args):
     # Random seeding
     if args.manual_seed is None:
         args.manual_seed = random.randint(1, 100000)
+    return args
+
+
+def main(args):
     random.seed(args.manual_seed)
     np.random.seed(args.manual_seed)
     torch.manual_seed(args.manual_seed)
