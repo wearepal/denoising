@@ -45,4 +45,4 @@ def test(args, sample_transform):
             denoised = model(noisy, iso)
             denoised = denoised.cpu()
             im = F.to_pil_image(torch.squeeze(denoised))
-            im.save(save_path / f"Test_Image_{img_no}.png")
+            im.save(save_path / f"Test_Image_{img_no+1}.png")
