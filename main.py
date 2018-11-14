@@ -13,7 +13,7 @@ from torchvision import transforms
 from optimisation.training import train, validate, evaluate_psnr_ssim
 from optimisation.testing import test
 from optimisation import loss
-from utils import TransformedHuaweiDataset
+from utils import TransformedHuaweiDataset, transform_sample
 import models
 
 
@@ -82,25 +82,6 @@ def parse_arguments(raw_args=None):
     return args
 
 
-def _transform_sample(sample):
-        """Transformation for sample dict, should be used for test data as well as train"""
-        # Define transforms:
-        noisy_transforms = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-        ])
-        clean_transforms = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-        ])
-        transformed_sample = {
-            'clean': clean_transforms(sample['clean']) if 'clean' in sample else None,
-            'noisy': noisy_transforms(sample['noisy']),
-            'iso': torch.FloatTensor([(sample['iso'] - 1215.32) / 958.13])   # (x - mean) / std
-        }
-        return {k:v for k,v in transformed_sample.items() if v is not None}
-
-
 def main(args):
     random.seed(args.manual_seed)
     np.random.seed(args.manual_seed)
@@ -111,7 +92,7 @@ def main(args):
         torch.cuda.set_device(args.gpu_num)
 
     if args.run_on_test:
-        test(args, _transform_sample)
+        test(args, transform_sample)
         return
     
     # Create results path
@@ -138,7 +119,7 @@ def main(args):
     criterion = getattr(loss, args.loss)()
     criterion = criterion.cuda() if args.cuda else criterion
 
-    dataset = TransformedHuaweiDataset(root_dir=args.data_dir, transform=_transform_sample)
+    dataset = TransformedHuaweiDataset(root_dir=args.data_dir, transform=transform_sample)
     train_dataset, val_dataset = dataset.random_split(test_ratio=args.test_split,
                                                       data_subset=args.data_subset)
 

@@ -193,3 +193,22 @@ class CsvLoader(Dataset):
         test_idx = np.random.choice(np.arange(n_total), n_test_images, replace=False)
         train_idx = np.setdiff1d(np.arange(n_total), test_idx)
         return Subset(self, train_idx), Subset(self, test_idx)
+
+
+def transform_sample(sample):
+    """Transformation for sample dict, should be used for test data as well as train"""
+    # Define transforms:
+    noisy_transforms = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    ])
+    clean_transforms = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    ])
+    transformed_sample = {
+        'clean': clean_transforms(sample['clean']) if 'clean' in sample else None,
+        'noisy': noisy_transforms(sample['noisy']),
+        'iso': torch.FloatTensor([(sample['iso'] - 1215.32) / 958.13])   # (x - mean) / std
+    }
+    return {k:v for k,v in transformed_sample.items() if v is not None}
