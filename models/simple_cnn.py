@@ -24,7 +24,7 @@ class SimpleCNN(nn.Module):
         self.tanh = nn.Tanh()
         self.residual = not args.interpolate
 
-    def forward(self, x, c=None):
+    def forward(self, x, c=None, class_labels=None):
         out = self.tanh(self.model(x))
 
         if self.residual:   # learn noise residual
@@ -53,11 +53,11 @@ class SimpleGatedCNN(nn.Module):
 
         self.residual = not args.interpolate
 
-    def forward(self, x, c=None):
+    def forward(self, x, c=None, class_labels=None):
         out = x
 
         for layer in self.model:
-            out = layer(out, c)
+            out = layer(out, c, class_labels)
         out = self.tanh(out)
 
         if self.residual:   # learn noise residual

@@ -25,11 +25,11 @@ class DGatedResNet(nn.Module):
 
         self.residual = True
 
-    def forward(self, x, c=None):
+    def forward(self, x, c=None, class_labels=None):
         out = x
 
         for layer in self.model:
-            out = layer(out, c)
+            out = layer(out, c, class_labels)
 
         if self.residual:   # learn noise residual
             out = out + x   # Should we apply tanh again after adding the residual?
