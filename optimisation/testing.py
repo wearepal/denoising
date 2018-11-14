@@ -11,7 +11,7 @@ def test(args, sample_transform):
         model_args = torch.load(model_path.parent / "denoising.config")
     elif model_path.is_dir():
         model_args = torch.load(model_path / "denoising.config")
-        model_path = model_path.parent / "model_best.pth.tar"
+        model_path = model_path / "model_best.pth.tar"
     if len(args.run_on_test) > 2:
         save_path = Path(args.run_on_test[2]).resolve()
     else:
