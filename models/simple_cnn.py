@@ -25,7 +25,7 @@ class SimpleCNN(nn.Module):
         self.model = nn.Sequential(*layers)
         self.residual = not args.interpolate
 
-    def forward(self, x, c=None):
+    def forward(self, x, c=None, class_labels=None):
         out = self.model(x)
 
         if self.residual:   # learn noise residual
@@ -54,7 +54,7 @@ class SimpleGatedCNN(nn.Module):
 
         self.residual = not args.interpolate
 
-    def forward(self, x, c=None):
+    def forward(self, x, c=None, class_labels=None):
         out = x
 
         for layer in self.model:
