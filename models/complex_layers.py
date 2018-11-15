@@ -111,7 +111,7 @@ class ComplexGatedConv2d(nn.Module):
         hi = σ(Wg,i ∗ xi + V^T g,ic) * activation(Wf,i ∗ xi + V^Tf,ic)
 
         Args:
-            x: input tensor, [B, C, H, W]
+            x: input tensor, [B, C, H, W, 2]
             c: extra conditioning data (image ISO).
             In cases where c encodes spatial or sequential information (such as a sequence of linguistic features),
             the matrix products are replaced with convolutions.
@@ -214,17 +214,30 @@ class ComplexBatchNorm2d(nn.Module):
         The normalization procedure allows one to decorrelate the
         imaginary and real parts of a unit
         """
-        tau = Vrr + Vii
-        delta = (Vrr * Vii) - (Vri ** 2)
+        # We require the covariance matrix's inverse square root. That first requires
+        # square rooting, followed by inversion
 
-        s = delta.sqrt()
-        t = (tau + 2 * s).sqrt()
+        # trace = Vrr + Vii. Guaranteed >= 0 because SPD.
+        trace = Vrr + Vii
+        # determinant. Guaranteed >= 0 because SPD
+        det = (Vrr * Vii) - (Vri ** 2)
 
-        # Compute matrix inverse
-        st = s * t
-        Wrr = (Vii + s) / st
-        Wii = (Vrr + s) / st
-        Wri = -Vri / st
+        s = det.sqrt()  # determinant of square root matrix
+        t = (trace + 2 * s).sqrt()
+
+        # # The square root matrix could now be explicitly formed as
+        #             [ Vrr+s Vri   ]
+        #       (1/t) [ Vir   Vii+s ]
+        #  # but we don't need to do this immediately since we can also simultaneously
+        #  invert. We can do this because we've already computed the determinant of
+        #  the square root matrix, and can thus invert it using the analytical
+        #  solution for 2x2 matrices.
+        #             [  Vii+s  -Vri   ]
+        #   (1/s)(1/t)[ -Vir     Vrr+s ]
+        inverse_st = 1. / (s * t)
+        Wrr = (Vii + s) * inverse_st
+        Wii = (Vrr + s) * inverse_st
+        Wri = -Vri * inverse_st
 
         out_real = Wrr * centered_real + Wri * centered_im
         out_im = Wri * centered_real + Wii * centered_im
