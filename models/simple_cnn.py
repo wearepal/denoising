@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 
 from models.layers import GatedConv2d, GatedConvLayer, ConvLayer
@@ -18,7 +19,7 @@ class SimpleCNN(nn.Module):
             layers.append(ConvLayer(args.cnn_hidden_channels, args.cnn_hidden_channels))
         # Output layer
         layers.append(ConvLayer(args.cnn_hidden_channels, args.cnn_in_channels,
-                                normalize=False, layer_activation=None))
+                                normalize=False, layer_activation=nn.Tanh()))
         # Output layer
 
         self.model = nn.Sequential(*layers)
@@ -29,8 +30,8 @@ class SimpleCNN(nn.Module):
         out = self.model(x)
 
         if self.residual:   # learn noise residual
-            out = out + x   # Should we apply tanh again after adding the residual?
-        out = self.tanh(out)
+            out = out + x
+            out = torch.clamp(out, min=-1, max=1)     # clip values to [-1, 1]
 
         return out
 
@@ -50,7 +51,7 @@ class SimpleGatedCNN(nn.Module):
             layers.append(GatedConvLayer(args.cnn_hidden_channels, args.cnn_hidden_channels, local_condition=args.iso))
         # Output layer
         layers.append(GatedConvLayer(args.cnn_hidden_channels, args.cnn_in_channels, local_condition=args.iso,
-                                     normalize=False, layer_activation=None))
+                                     normalize=False, layer_activation=nn.Tanh()))
         self.model = nn.ModuleList(layers)
         self.tanh = nn.Tanh()
 
@@ -63,7 +64,7 @@ class SimpleGatedCNN(nn.Module):
             out = layer(out, c)
 
         if self.residual:   # learn noise residual
-            out = out + x   # Should we apply tanh again after adding the residual?
-        out = self.tanh(out)
+            out = out + x
+            out = torch.clamp(out, min=-1, max=1)  # clip values to [-1, 1]
 
         return out
