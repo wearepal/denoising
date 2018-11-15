@@ -22,7 +22,9 @@ class IRCNN(nn.Module):
         layers.append(ConvLayer(64, args.cnn_in_channels, normalize=False, layer_activation=None))
         self.model = nn.Sequential(*layers)
 
+        self.tanh = nn.Tanh()
+
     def forward(self, x, c=None):
         noise_residual = self.model(x)
         denoised = x - noise_residual
-        return denoised
+        return self.tanh(denoised)
