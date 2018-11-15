@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from common import ROOT_DIR
+from tests.common import ROOT_DIR
 from utils import HuaweiDataset
 
 

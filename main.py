@@ -36,11 +36,14 @@ def parse_arguments(raw_args=None):
     parser.add_argument('-nc', '--no_cuda', action='store_true', default=False,
                         help='disables CUDA training')
 
-    parser.add_argument('--manual_seed', type=int, help='manual seed, if not given resorts to random seed.')
+    parser.add_argument('--manual_seed', type=int,
+                        help='manual seed, if not given resorts to random seed.')
 
     parser.add_argument('-sd', '--save_dir', type=str, metavar='PATH', default='',
-                        help='path to save results and checkpoints to (default: ../results/<model>/<current timestamp>)')
+                        help='path to save results and checkpoints to '
+                             '(default: ../results/<model>/<current timestamp>)')
 
+    # training paramters
     parser.add_argument('--epochs', default=100, type=int, metavar='N',
                         help='number of total epochs to run (default: 100)')
     parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
@@ -53,16 +56,21 @@ def parse_arguments(raw_args=None):
 
     parser.add_argument('-lr', '--learning_rate', default=0.005, type=float,
                         metavar='LR', help='initial learning rate (default: 0.005)')
+
+    # model parameters
     parser.add_argument('--loss', type=str, default='MSELoss')
     parser.add_argument('--model', type=str, default='SimpleCNN')
     parser.add_argument('--optim', type=str, default='Adam')
+    parser.add_argument('--args_to_loss', action='store_true', default=False,
+                        help='whether to pass the commandline arguments to the loss function')
 
     parser.add_argument('--resume', metavar='PATH', help='load from a path to a saved checkpoint')
     parser.add_argument('--evaluate', action='store_true',
                         help='evaluate model on validation set (default: false)')
 
     # gpu/cpu
-    parser.add_argument('--gpu_num', type=int, default=0, metavar='GPU', help='choose GPU to run on.')
+    parser.add_argument('--gpu_num', type=int, default=0, metavar='GPU',
+                        help='choose GPU to run on.')
 
     # CNN
     parser.add_argument('--cnn_in_channels', type=int, default=3)
@@ -72,6 +80,11 @@ def parse_arguments(raw_args=None):
                         help='interpolate rather than learn noise as an image residual')
     parser.add_argument('-ni', '--no_iso', action='store_true', default=False,
                         help='not to use image ISO values as extra conditioning data')
+
+    # VGG loss
+    parser.add_argument('--vgg_feature_layer', type=int, default=11,
+                        help='VGG19 layer number from which to extract features')
+
     args = parser.parse_args(raw_args)
     args.cuda = not args.no_cuda and torch.cuda.is_available()
     args.iso = not args.no_iso
@@ -116,7 +129,8 @@ def main(args):
     model = getattr(models, args.model)(args)
     model = model.cuda() if args.cuda else model
     optimizer = getattr(torch.optim, args.optim)(model.parameters(), lr=args.learning_rate)
-    criterion = getattr(loss, args.loss)()
+    criterion_constructor = getattr(loss, args.loss)
+    criterion = criterion_constructor(args) if args.args_to_loss else criterion_constructor()
     criterion = criterion.cuda() if args.cuda else criterion
 
     dataset = TransformedHuaweiDataset(root_dir=args.data_dir, transform=transform_sample)
