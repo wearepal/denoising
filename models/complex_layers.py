@@ -305,14 +305,14 @@ class ComplexBatchNorm2d(nn.Module):
             Vii = self.running_Vii
             Vri = self.running_Vri
 
-        if self.affine:
-            out_real, out_im = self._whiten(centered_real, centered_im, Vrr, Vii, Vri)
+        out_real, out_im = self._whiten(centered_real, centered_im, Vrr, Vii, Vri)
 
+        if self.affine:
             out_real = (self.gamma_rr * out_real + self.gamma_ri * out_im)
             out_im = (self.gamma_ri * out_real + self.gamma_ii * out_im)
             out = torch.cat([out_real[..., None], out_im[..., None]], dim=-1) + self.beta
         else:
-            out = x
+            out = torch.cat([out_real[..., None], out_im[..., None]], dim=-1)
 
         return out
 
