@@ -342,7 +342,7 @@ def _test_complex_gated_conv2d():
 
 
 def _test_complex_batch_norm():
-    x = torch.rand(6, 3, 12, 12, 2)
+    x = torch.randn(6, 3, 12, 12, 2)
     bn = ComplexBatchNorm2d(3)
-    out = bn(x).shape
+    out = bn(x)
     assert out.shape == x.shape
