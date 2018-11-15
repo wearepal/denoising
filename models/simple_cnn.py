@@ -58,7 +58,7 @@ class SimpleGatedCNN(nn.Module):
         out = x
 
         for layer in self.model:
-            out = layer(out, c)
+            out = layer(out, c, class_labels)
 
         if self.residual:   # learn noise residual
             out = out + x

@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 from tensorboardX import SummaryWriter
 from torchvision import transforms
 
-from optimisation.training import train, validate, evaluate_psnr_ssim
+from optimisation.training import train, validate, evaluate_psnr_and_vgg_loss
 from optimisation import loss
 from utils import TransformedHuaweiDataset
 import models
@@ -37,8 +37,11 @@ def parse_arguments(raw_args=None):
     parser.add_argument('-sd', '--save_dir', type=str, metavar='PATH', default='',
                         help='path to save results and checkpoints to '
                              '(default: ../results/<model>/<current timestamp>)')
+    parser.add_argument('--num-samples-to-log', type=int, metavar='N', default=32,
+                        help='number of image samples to write to tensorboard each epoch'
+                             ' (default: 32)')
 
-    # training paramters
+    # training parameters
     parser.add_argument('--epochs', default=100, type=int, metavar='N',
                         help='number of total epochs to run (default: 100)')
     parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
@@ -106,7 +109,7 @@ def main(args):
     else:
         save_path = Path().resolve().parent / "results" / args.model / str(round(time.time()))
         save_path.parent.mkdir(exist_ok=True)
-    save_path.mkdir() # Will throw an exception if the path exists OR the parent path _doesn't_
+    save_path.mkdir()  # Will throw an exception if the path exists OR the parent path _doesn't_
 
     kwargs = {'pin_memory': True} if args.cuda else {}
 
@@ -168,7 +171,7 @@ def main(args):
 
     if args.evaluate:
         # Evaluate model using PSNR and SSIM metrics
-        evaluate_psnr_ssim(args, model, val_loader)
+        evaluate_psnr_and_vgg_loss(args, model, val_loader)
         return
 
     for epoch in range(args.start_epoch, args.epochs):
@@ -196,7 +199,7 @@ def main(args):
         save_checkpoint(checkpoint, model_filename, is_best, save_path)
 
     # Evaluate model using PSNR and SSIM metrics
-    evaluate_psnr_ssim(args, model, val_loader)
+    evaluate_psnr_and_vgg_loss(args, model, val_loader)
 
 
 def save_checkpoint(checkpoint, filename, is_best, save_path):
