@@ -30,7 +30,6 @@ class SimpleCNN(nn.Module):
 
         if self.residual:   # learn noise residual
             out = out + x
-            out = torch.clamp(out, min=-1, max=1)     # clip values to [-1, 1]
 
         return out
 
@@ -63,6 +62,5 @@ class SimpleGatedCNN(nn.Module):
 
         if self.residual:   # learn noise residual
             out = out + x
-            out = torch.clamp(out, min=-1, max=1)  # clip values to [-1, 1]
 
         return out

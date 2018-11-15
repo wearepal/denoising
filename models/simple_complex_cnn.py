@@ -32,10 +32,10 @@ class SimpleComplexGatedCNN(nn.Module):
         for layer in self.model:
             out = layer(out, c)
         # inverse fourier transform
-        out = torch.irfft(out, signal_ndim=2, signal_sizes=x.shape[2:]).tanh()
+        out = torch.irfft(out, signal_ndim=2, signal_sizes=x.shape[2:])
+        out = out.tanh()
 
         if self.residual:   # learn noise residual
             out = out + x
-            out = torch.clamp(out, min=-1, max=1)  # clip values to [-1, 1]
 
         return out

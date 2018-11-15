@@ -331,6 +331,37 @@ class ComplexBatchNorm2d(nn.Module):
                                        exponential_average_factor)
 
 
+class ComplexConditionalNorm(nn.Module):
+
+    def __init__(self, num_features, num_classes):
+        super().__init__()
+        self.num_features = num_features
+
+        self.norm = ComplexBatchNorm2d(num_features, affine=False)
+
+        self.embed = nn.Embedding(num_classes, num_features * 5)
+        self.embed.weight.data[:, :3 * num_features].normal_(1, 0.02)  # Initialise scale at N(1, 0.02)
+        self.embed.weight.data[:, num_features:].zero_()    # Initialise bias at 0
+
+    def forward(self, x, class_labels):
+        out_real, out_im = self.norm(x).unbind(dim=-1)
+
+        params = self.embed(class_labels)
+        gammas = params[:, :3 * self.num_features]
+        beta = params[:, 3 * self.num_features:].view(-1, self.num_features, 1, 1, 2)
+
+        gamma_rr, gamma_ii, gamma_ri = gammas.chunk(3, 1)
+        gamma_rr = gamma_rr.view(-1, self.num_features, 1, 1)
+        gamma_ii = gamma_ii.view_as(gamma_rr)
+        gamma_ri = gamma_rr.view_as(gamma_rr)
+
+        out_real = (gamma_rr * out_real + gamma_ri * out_im)
+        out_im = (gamma_ri * out_real + gamma_ii * out_im)
+        out = torch.cat([out_real[..., None], out_im[..., None]], dim=-1) + beta
+
+        return out
+
+
 def _calculate_fan_in_and_fan_out(shape):
     """
     Copied with minor modifications from torch.nn.init
@@ -398,4 +429,12 @@ def _test_complex_batch_norm():
     x = torch.randn(6, 3, 12, 12, 2)
     bn = ComplexBatchNorm2d(3)
     out = bn(x)
+    assert out.shape == x.shape
+
+
+def _test_complex_cond_batch_norm():
+    x = torch.randn(5, 16, 6, 6, 2)
+    y = torch.randint(3, (x.size(0),)).long()
+    norm = ComplexConditionalNorm(num_features=16, num_classes=3)
+    out = norm(x, y)
     assert out.shape == x.shape
