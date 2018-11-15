@@ -282,6 +282,9 @@ class ResidualBLock(nn.Module):
                  dilation=(1, 1), residual=True, num_norm_groups=0, num_classes=0):
         super().__init__()
 
+        if isinstance(dilation, int):   # use the same dilation factor for both convolutions
+            dilation = (dilation, dilation)
+
         conv1_padding = padding * dilation[0]    # ensure the dilation does not affect the output size
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, stride=stride,
                                padding=conv1_padding, dilation=dilation[0], bias=False)
@@ -331,6 +334,9 @@ class GatedResidualBLock(nn.Module):
                  dilation=(1, 1), residual=True, activation=None, local_condition=False,
                  block_residual=True, num_norm_groups=0, num_classes=0):
         super().__init__()
+
+        if isinstance(dilation, int):   # use the same dilation factor for both convolutions
+            dilation = (dilation, dilation)
 
         conv1_padding = padding * dilation[0]    # ensure the dilation does not affect the output size
         self.conv1 = GatedConv2d(in_channels, out_channels, kernel_size=kernel_size, stride=stride,
