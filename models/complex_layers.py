@@ -198,8 +198,8 @@ class ComplexBatchNorm2d(nn.Module):
         if self.affine:
             # scaling
             gamma_shape = (1, num_features, 1, 1)
-            self.gamma_rr = nn.Parameter(torch.full(gamma_shape, fill_value=1 / math.sqrt(2)))
-            self.gamma_ii = nn.Parameter(torch.full(gamma_shape, fill_value=1 / math.sqrt(2)))
+            self.gamma_rr = nn.Parameter(torch.full(gamma_shape, fill_value=1. / math.sqrt(2)))
+            self.gamma_ii = nn.Parameter(torch.full(gamma_shape, fill_value=1. / math.sqrt(2)))
             self.gamma_ri = nn.Parameter(torch.zeros(gamma_shape))
             # centering
             beta_shape = gamma_shape + (2,)
@@ -212,9 +212,9 @@ class ComplexBatchNorm2d(nn.Module):
 
         if self.track_running_stats:
             self.register_buffer('running_Vrr', torch.full((num_features,),
-                                                           fill_value=1 / math.sqrt(2)))
+                                                           fill_value=1. / math.sqrt(2)))
             self.register_buffer('running_Vii', torch.full((num_features,),
-                                                           fill_value=1 / math.sqrt(2)))
+                                                           fill_value=1. / math.sqrt(2)))
             self.register_buffer('running_Vri', torch.zeros(num_features))
             self.register_buffer('running_mean_real', torch.zeros(num_features))
             self.register_buffer('running_mean_im', torch.zeros(num_features))
@@ -229,8 +229,8 @@ class ComplexBatchNorm2d(nn.Module):
 
     def reset_running_stats(self):
         if self.track_running_stats:
-            self.running_Vrr.fill_(1 / math.sqrt(2))
-            self.running_Vri.fill_(1 / math.sqrt(2))
+            self.running_Vrr.fill_(1. / math.sqrt(2))
+            self.running_Vri.fill_(1. / math.sqrt(2))
             self.running_Vii.zero_()
             self.running_mean_real.zero_()
             self.running_mean_im.zero_()
@@ -376,9 +376,9 @@ def _complex_he_init(shape):
 
 
 def _test_complex_conv2d():
-    x = torch.randn(2, 3, 12, 12)
+    x = torch.randn(6, 3, 12, 12)
     x_fourier = torch.rfft(x, onesided=True, signal_ndim=2)
-    conv = ComplexConv2d(3, 3, kernel_size=3, padding=1)
+    conv = ComplexConv2d(3, x.size(1), kernel_size=3, padding=1)
     out = conv(x_fourier)
     out = torch.irfft(out, onesided=True, signal_ndim=2, signal_sizes=x.shape[2:])
     assert out.shape == x.shape
