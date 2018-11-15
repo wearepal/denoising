@@ -41,7 +41,7 @@ class ComplexConv2d(nn.Module):
         x_real, x_im = torch.unbind(x, dim=-1)
 
         out_real = self.conv_real(x_real) - self.conv_im(x_im)
-        out_im = self.conv_im(x_im) + self.conv_real(x_real)
+        out_im = self.conv_im(x_real) + self.conv_real(x_im)
         # Concatenate the real and imaginary values to form a complex matrix
         out = torch.cat([out_real[..., None], out_im[..., None]], dim=-1)
 
