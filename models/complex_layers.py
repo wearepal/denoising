@@ -447,12 +447,3 @@ def _test_complex_cond_batch_norm():
     norm = ComplexConditionalNorm(num_features=16, num_classes=3)
     out = norm(x, y)
     assert out.shape == x.shape
-
-
-_test_complex_batch_norm()
-# x = torch.randn(10, 3, 6, 6)
-# x2 = torch.randn(10, 3, 6, 6)
-# bn = nn.BatchNorm2d(3)
-# out = bn(x)
-# out = bn(x2)
-# print(bn.running_mean)
