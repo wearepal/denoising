@@ -9,6 +9,13 @@ import torch.nn as nn
 from models.layers import ConvLayerParent
 
 
+def complex_norm(num_channels, num_classes=0):
+    if num_classes > 1:
+        return ComplexConditionalNorm(num_features=num_channels, num_classes=num_classes)
+    else:
+        return ComplexBatchNorm2d(num_features=num_channels)
+
+
 class ComplexConv2d(nn.Module):
 
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, bias=True):
@@ -62,7 +69,7 @@ class ComplexConvLayer(ConvLayerParent):
                          layer_activation, num_norm_groups, num_classes, normalize, preserve_size)
 
         self.conv = ComplexConv2d(in_channels, out_channels, kernel_size, stride, padding, dilation, bias=normalize)
-        self.norm = ComplexBatchNorm2d(out_channels) if normalize else None
+        self.norm = complex_norm(out_channels, num_classes) if normalize else None
 
 
 class ComplexGatedConv2d(nn.Module):
@@ -171,7 +178,7 @@ class ComplexGatedConvLayer(ConvLayerParent):
 
         self.conv = ComplexGatedConv2d(in_channels, out_channels, kernel_size, stride, padding, dilation,
                                        conv_activation, local_condition, conv_residual)
-        self.norm = ComplexBatchNorm2d(out_channels) if normalize else None
+        self.norm = complex_norm(out_channels, num_classes) if normalize else None
 
     def forward(self, x, c=None, class_labels=None):
         out = self.conv(x, c)
@@ -360,6 +367,7 @@ class ComplexConditionalNorm(nn.Module):
         out = torch.cat([out_real[..., None], out_im[..., None]], dim=-1) + beta
 
         return out
+
 
 
 def _calculate_fan_in_and_fan_out(shape):
