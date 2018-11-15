@@ -124,7 +124,6 @@ class ComplexGatedConv2d(nn.Module):
 
         if self.local_condition and c is not None:
             c = c.view(-1, 1, 1, 1, 1)
-            print((self.cond_features_bias * c).shape)
             features += (self.cond_features_bias * c)
             gate += (self.cond_gate_bias * c)
 
