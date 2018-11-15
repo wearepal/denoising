@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from models.layers import GatedConv2d, GatedConvLayer, ConvLayer
+from models.layers import GatedConvLayer, ConvLayer
 
 
 class SimpleCNN(nn.Module):
