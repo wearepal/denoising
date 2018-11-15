@@ -6,6 +6,8 @@ from numpy.random import RandomState
 import torch
 import torch.nn as nn
 
+from models.layers import ConvLayerParent
+
 
 class ComplexConv2d(nn.Module):
 
@@ -49,6 +51,18 @@ class ComplexConv2d(nn.Module):
             out += self.bias
 
         return out
+
+
+class ComplexConvLayer(ConvLayerParent):
+
+    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, dilation=1,
+                 layer_activation=nn.ReLU(inplace=True), num_norm_groups=0, num_classes=0,
+                 normalize=True, preserve_size=False):
+        super().__init__(in_channels, out_channels, kernel_size, stride, padding, dilation,
+                         layer_activation, num_norm_groups, num_classes, normalize, preserve_size)
+
+        self.conv = ComplexConv2d(in_channels, out_channels, kernel_size, stride, padding, dilation, bias=normalize)
+        self.norm = ComplexBatchNorm2d(out_channels) if normalize else None
 
 
 class ComplexGatedConv2d(nn.Module):
@@ -138,6 +152,33 @@ class ComplexGatedConv2d(nn.Module):
             if self.downsample is not None:
                 residual = self.downsample(residual)
             out += residual
+
+        return out
+
+
+class ComplexGatedConvLayer(ConvLayerParent):
+
+    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, dilation=1,
+                 conv_activation=None, layer_activation=nn.ReLU(inplace=True), local_condition=False,
+                 conv_residual=True, num_norm_groups=0, num_classes=0,
+                 normalize=True, preserve_size=False):
+        super().__init__(in_channels, out_channels, kernel_size, stride, padding, dilation,
+                         layer_activation, num_norm_groups, num_classes, normalize, preserve_size)
+
+        self.conv_activation = conv_activation
+        self.local_condition = local_condition
+        self.conv_residual = conv_residual
+
+        self.conv = ComplexGatedConv2d(in_channels, out_channels, kernel_size, stride, padding, dilation,
+                                       conv_activation, local_condition, conv_residual)
+        self.norm = ComplexBatchNorm2d(out_channels) if normalize else None
+
+    def forward(self, x, c=None, class_labels=None):
+        out = self.conv(x, c)
+        if self.norm is not None:
+            out = self.norm(out, class_labels) if self.conditional_norm else self.norm(out)
+        if self.layer_activation is not None:
+            out = self.layer_activation(out)
 
         return out
 

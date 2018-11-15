@@ -17,18 +17,20 @@ class SimpleCNN(nn.Module):
         for _ in range(args.cnn_num_hidden_layers):
             layers.append(ConvLayer(args.cnn_hidden_channels, args.cnn_hidden_channels))
         # Output layer
-        layers.append(nn.Conv2d(in_channels=args.cnn_hidden_channels, out_channels=args.cnn_in_channels,
-                                kernel_size=3, stride=1, padding=1))
+        layers.append(ConvLayer(args.cnn_hidden_channels, args.cnn_in_channels,
+                                normalize=False, layer_activation=None))
+        # Output layer
 
         self.model = nn.Sequential(*layers)
         self.tanh = nn.Tanh()
         self.residual = not args.interpolate
 
     def forward(self, x, c=None):
-        out = self.tanh(self.model(x))
+        out = self.model(x)
 
         if self.residual:   # learn noise residual
             out = out + x   # Should we apply tanh again after adding the residual?
+        out = self.tanh(out)
 
         return out
 
@@ -47,7 +49,8 @@ class SimpleGatedCNN(nn.Module):
         for _ in range(args.cnn_num_hidden_layers):
             layers.append(GatedConvLayer(args.cnn_hidden_channels, args.cnn_hidden_channels, local_condition=args.iso))
         # Output layer
-        layers.append(GatedConv2d(args.cnn_hidden_channels, args.cnn_in_channels, local_condition=args.iso))
+        layers.append(GatedConvLayer(args.cnn_hidden_channels, args.cnn_in_channels, local_condition=args.iso,
+                                     normalize=False, layer_activation=None))
         self.model = nn.ModuleList(layers)
         self.tanh = nn.Tanh()
 
@@ -58,9 +61,9 @@ class SimpleGatedCNN(nn.Module):
 
         for layer in self.model:
             out = layer(out, c)
-        out = self.tanh(out)
 
         if self.residual:   # learn noise residual
             out = out + x   # Should we apply tanh again after adding the residual?
+        out = self.tanh(out)
 
         return out
