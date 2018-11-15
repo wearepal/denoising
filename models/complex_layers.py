@@ -9,13 +9,6 @@ import torch.nn as nn
 from models.layers import ConvLayerParent
 
 
-def complex_norm(num_channels, num_classes=0):
-    if num_classes > 1:
-        return ComplexConditionalNorm(num_features=num_channels, num_classes=num_classes)
-    else:
-        return ComplexBatchNorm2d(num_features=num_channels)
-
-
 class ComplexConv2d(nn.Module):
 
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, bias=True):
@@ -205,8 +198,8 @@ class ComplexBatchNorm2d(nn.Module):
         if self.affine:
             # scaling
             gamma_shape = (1, num_features, 1, 1)
-            self.gamma_rr = nn.Parameter(torch.full(gamma_shape, fill_value=1. / math.sqrt(2)))
-            self.gamma_ii = nn.Parameter(torch.full(gamma_shape, fill_value=1. / math.sqrt(2)))
+            self.gamma_rr = nn.Parameter(torch.full(gamma_shape, fill_value=1.0 / math.sqrt(2)))
+            self.gamma_ii = nn.Parameter(torch.full(gamma_shape, fill_value=1.0 / math.sqrt(2)))
             self.gamma_ri = nn.Parameter(torch.zeros(gamma_shape))
             # centering
             beta_shape = gamma_shape + (2,)
@@ -218,11 +211,11 @@ class ComplexBatchNorm2d(nn.Module):
             self.register_parameter('beta', None)
 
         if self.track_running_stats:
-            self.register_buffer('running_Vrr', torch.full((num_features,),
-                                                           fill_value=1. / math.sqrt(2)))
-            self.register_buffer('running_Vii', torch.full((num_features,),
-                                                           fill_value=1. / math.sqrt(2)))
-            self.register_buffer('running_Vri', torch.zeros(num_features))
+            self.register_buffer('running_Vrr', torch.full((1, num_features, 1, 1),
+                                                           fill_value=1.0 / math.sqrt(2)))
+            self.register_buffer('running_Vii', torch.full((1, num_features, 1, 1),
+                                                           fill_value=1.0 / math.sqrt(2)))
+            self.register_buffer('running_Vri', torch.zeros(1, num_features, 1, 1))
             self.register_buffer('running_mean_real', torch.zeros(1, num_features, 1, 1))
             self.register_buffer('running_mean_im', torch.zeros(1, num_features, 1, 1))
             self.register_buffer('num_batches_tracked', torch.tensor(0, dtype=torch.long))
@@ -245,7 +238,7 @@ class ComplexBatchNorm2d(nn.Module):
 
     @staticmethod
     def _moving_average(new_value, running_mean, momentum):
-        return momentum * new_value + (1 - momentum) * running_mean
+        return momentum * new_value + (1.0 - momentum) * running_mean
 
     def _update_stats(self, Vrr, Vii, Vri, mean_real, mean_im, momentum):
         if self.affine:
@@ -256,54 +249,21 @@ class ComplexBatchNorm2d(nn.Module):
             self.running_mean_im = self._moving_average(mean_im, self.running_mean_im, momentum)
 
     @staticmethod
-    def _whiten(centered_real, centered_im, Vrr, Vii, Vri):
-        """
-        The normalization procedure allows one to decorrelate the
-        imaginary and real parts of a unit
-        """
-        # We require the covariance matrix's inverse square root. That first requires
-        # square rooting, followed by inversion
-
-        # trace = Vrr + Vii. Guaranteed >= 0 because SPD.
-        trace = Vrr + Vii
-        # determinant. Guaranteed >= 0 because SPD
-        det = (Vrr * Vii) - (Vri ** 2)
-
-        s = det.sqrt()  # determinant of square root matrix
-        t = (trace + 2 * s).sqrt()
-
-        # # The square root matrix could now be explicitly formed as
-        #             [ Vrr+s Vri   ]
-        #       (1/t) [ Vir   Vii+s ]
-        #  # but we don't need to do this immediately since we can also simultaneously
-        #  invert. We can do this because we've already computed the determinant of
-        #  the square root matrix, and can thus invert it using the analytical
-        #  solution for 2x2 matrices.
-        #             [  Vii+s  -Vri   ]
-        #   (1/s)(1/t)[ -Vir     Vrr+s ]
-        inverse_st = 1. / (s * t)
-        Wrr = (Vii + s) * inverse_st
-        Wii = (Vrr + s) * inverse_st
-        Wri = -Vri * inverse_st
-
-        out_real = Wrr * centered_real + Wri * centered_im
-        out_im = Wri * centered_real + Wii * centered_im
-
-        return out_real, out_im
+    def _channelwise_mean(tensor):
+        return tensor.mean(-1, keepdim=True).mean(-1, keepdim=True).mean(0, keepdim=True)
 
     def complex_batch_norm(self, x, training=False, momentum=0.9):
         x_real, x_im = torch.unbind(x, dim=-1)
 
         if training:
-            x_real_mean = x_real.mean(0, keepdim=True).mean(1, keepdim=True).mean(1, keepdim=True)
-            x_im_mean = x_im.mean(0, keepdim=True).mean(1, keepdim=True).mean(1, keepdim=True)
+            x_real_mean = self._channelwise_mean(x_real)
+            x_im_mean = self._channelwise_mean(x_im)
             centered_real = x_real - x_real_mean
             centered_im = x_im - x_im_mean
             # Covariance matrices
-            Vrr = (centered_real ** 2).mean() + self.eps
-            print(Vrr.shape)
-            Vii = (centered_im ** 2).mean() + self.eps
-            Vri = (centered_real * centered_im).mean()
+            Vrr = self._channelwise_mean(centered_real ** 2) + self.eps
+            Vii = self._channelwise_mean(centered_im ** 2) + self.eps
+            Vri = self._channelwise_mean(centered_real * centered_im)
             # update moving averages
             self._update_stats(Vrr, Vii, Vri, x_real_mean, x_im_mean, momentum)
         else:
@@ -312,9 +272,8 @@ class ComplexBatchNorm2d(nn.Module):
             Vrr = self.running_Vrr
             Vii = self.running_Vii
             Vri = self.running_Vri
-            print(Vrr.shape)
 
-        out_real, out_im = self._whiten(centered_real, centered_im, Vrr, Vii, Vri)
+        out_real, out_im = complex_standardization(centered_real, centered_im, Vrr, Vii, Vri)
 
         if self.affine:
             out_real = (self.gamma_rr * out_real + self.gamma_ri * out_im)
@@ -350,11 +309,10 @@ class ComplexConditionalNorm(nn.Module):
 
         self.embed = nn.Embedding(num_classes, num_features * 5)
         self.embed.weight.data[:, :3 * num_features].normal_(1, 0.02)  # Initialise scale at N(1, 0.02)
-        self.embed.weight.data[:, num_features:].zero_()    # Initialise bias at 0
+        self.embed.weight.data[:, 3 * num_features:].zero_()    # Initialise bias at 0
 
     def forward(self, x, class_labels):
-        out_real, out_im = self.norm(x).unbind(dim=-1)
-
+        out_real, out_im = torch.unbind(self.norm(x), dim=-1)
         params = self.embed(class_labels)
         gammas = params[:, :3 * self.num_features]
         beta = params[:, 3 * self.num_features:].view(-1, self.num_features, 1, 1, 2)
@@ -369,6 +327,49 @@ class ComplexConditionalNorm(nn.Module):
         out = torch.cat([out_real[..., None], out_im[..., None]], dim=-1) + beta
 
         return out
+
+
+def complex_norm(num_channels, num_classes=0):
+    if num_classes > 1:
+        return ComplexConditionalNorm(num_features=num_channels, num_classes=num_classes)
+    else:
+        return ComplexBatchNorm2d(num_features=num_channels)
+
+
+def complex_standardization(centered_real, centered_im, Vrr, Vii, Vri):
+    """
+    The normalization procedure allows one to decorrelate the
+    imaginary and real parts of a unit
+    """
+    # We require the covariance matrix's inverse square root. That first requires
+    # square rooting, followed by inversion
+
+    # trace = Vrr + Vii. Guaranteed >= 0 because SPD.
+    trace = Vrr + Vii
+    # determinant. Guaranteed >= 0 because SPD
+    det = (Vrr * Vii) - (Vri ** 2)
+
+    s = det.sqrt()  # determinant of square root matrix
+    t = (trace + 2 * s).sqrt()
+
+    # # The square root matrix could now be explicitly formed as
+    #             [ Vrr+s Vri   ]
+    #       (1/t) [ Vir   Vii+s ]
+    #  # but we don't need to do this immediately since we can also simultaneously
+    #  invert. We can do this because we've already computed the determinant of
+    #  the square root matrix, and can thus invert it using the analytical
+    #  solution for 2x2 matrices.
+    #             [  Vii+s  -Vri   ]
+    #   (1/s)(1/t)[ -Vir     Vrr+s ]
+    inverse_st = 1. / (s * t)
+    Wrr = (Vii + s) * inverse_st
+    Wii = (Vrr + s) * inverse_st
+    Wri = -Vri * inverse_st
+
+    out_real = Wrr * centered_real + Wri * centered_im
+    out_im = Wri * centered_real + Wii * centered_im
+
+    return out_real, out_im
 
 
 def _calculate_fan_in_and_fan_out(shape):
@@ -396,8 +397,8 @@ def _calculate_fan_in_and_fan_out(shape):
 
 def _complex_he_init(shape):
     """
-    Initialize kernels to be independent from each other as much as possible.
-    Derived from 'Deep Complex Networks' (https://arxiv.org/pdf/1705.09792.pdf).
+    Initialize kernels to be independent from each other as much as possible, as
+    proposed in 'Deep Complex Networks' (https://arxiv.org/pdf/1705.09792.pdf).
     """
     fan_in, fan_out = _calculate_fan_in_and_fan_out(shape)
     s = 2. / fan_in
@@ -439,11 +440,15 @@ def _test_complex_batch_norm():
     bn = ComplexBatchNorm2d(3).eval()
     out = bn(x)
     assert out.shape == x.shape
+    bn.eval()
+    bn(x)
 
 
 def _test_complex_cond_batch_norm():
     x = torch.randn(5, 16, 6, 6, 2)
     y = torch.randint(3, (x.size(0),)).long()
-    norm = ComplexConditionalNorm(num_features=16, num_classes=3)
-    out = norm(x, y)
+    bn = ComplexConditionalNorm(num_features=16, num_classes=3)
+    out = bn(x, y)
     assert out.shape == x.shape
+    bn.eval()
+    bn(x, y)
