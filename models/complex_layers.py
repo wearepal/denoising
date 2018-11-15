@@ -223,8 +223,8 @@ class ComplexBatchNorm2d(nn.Module):
             self.register_buffer('running_Vii', torch.full((num_features,),
                                                            fill_value=1. / math.sqrt(2)))
             self.register_buffer('running_Vri', torch.zeros(num_features))
-            self.register_buffer('running_mean_real', torch.zeros(num_features))
-            self.register_buffer('running_mean_im', torch.zeros(num_features))
+            self.register_buffer('running_mean_real', torch.zeros(1, num_features, 1, 1))
+            self.register_buffer('running_mean_im', torch.zeros(1, num_features, 1, 1))
             self.register_buffer('num_batches_tracked', torch.tensor(0, dtype=torch.long))
         else:
             self.register_buffer('running_Vrr', None)
@@ -295,12 +295,13 @@ class ComplexBatchNorm2d(nn.Module):
         x_real, x_im = torch.unbind(x, dim=-1)
 
         if training:
-            x_real_mean = x_real.mean()
-            x_im_mean = x_im.mean()
+            x_real_mean = x_real.mean(0, keepdim=True).mean(1, keepdim=True).mean(1, keepdim=True)
+            x_im_mean = x_im.mean(0, keepdim=True).mean(1, keepdim=True).mean(1, keepdim=True)
             centered_real = x_real - x_real_mean
             centered_im = x_im - x_im_mean
             # Covariance matrices
             Vrr = (centered_real ** 2).mean() + self.eps
+            print(Vrr.shape)
             Vii = (centered_im ** 2).mean() + self.eps
             Vri = (centered_real * centered_im).mean()
             # update moving averages
@@ -311,6 +312,7 @@ class ComplexBatchNorm2d(nn.Module):
             Vrr = self.running_Vrr
             Vii = self.running_Vii
             Vri = self.running_Vri
+            print(Vrr.shape)
 
         out_real, out_im = self._whiten(centered_real, centered_im, Vrr, Vii, Vri)
 
@@ -367,7 +369,6 @@ class ComplexConditionalNorm(nn.Module):
         out = torch.cat([out_real[..., None], out_im[..., None]], dim=-1) + beta
 
         return out
-
 
 
 def _calculate_fan_in_and_fan_out(shape):
@@ -435,7 +436,7 @@ def _test_complex_gated_conv2d():
 
 def _test_complex_batch_norm():
     x = torch.randn(6, 3, 12, 12, 2)
-    bn = ComplexBatchNorm2d(3)
+    bn = ComplexBatchNorm2d(3).eval()
     out = bn(x)
     assert out.shape == x.shape
 
@@ -446,3 +447,12 @@ def _test_complex_cond_batch_norm():
     norm = ComplexConditionalNorm(num_features=16, num_classes=3)
     out = norm(x, y)
     assert out.shape == x.shape
+
+
+_test_complex_batch_norm()
+# x = torch.randn(10, 3, 6, 6)
+# x2 = torch.randn(10, 3, 6, 6)
+# bn = nn.BatchNorm2d(3)
+# out = bn(x)
+# out = bn(x2)
+# print(bn.running_mean)

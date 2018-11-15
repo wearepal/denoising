@@ -19,7 +19,7 @@ class SimpleCNN(nn.Module):
             layers.append(ConvLayer(args.cnn_hidden_channels, args.cnn_hidden_channels))
         # Output layer
         layers.append(ConvLayer(args.cnn_hidden_channels, args.cnn_in_channels,
-                                normalize=False, layer_activation=nn.Tanh()))
+                                normalize=False, layer_activation=None))
         # Output layer
 
         self.model = nn.Sequential(*layers)
@@ -31,7 +31,7 @@ class SimpleCNN(nn.Module):
         if self.residual:   # learn noise residual
             out = out + x
 
-        return out
+        return out.tanh()
 
 
 class SimpleGatedCNN(nn.Module):
@@ -49,7 +49,7 @@ class SimpleGatedCNN(nn.Module):
             layers.append(GatedConvLayer(args.cnn_hidden_channels, args.cnn_hidden_channels, local_condition=args.iso))
         # Output layer
         layers.append(GatedConvLayer(args.cnn_hidden_channels, args.cnn_in_channels, local_condition=args.iso,
-                                     normalize=False, layer_activation=nn.Tanh()))
+                                     normalize=False, layer_activation=None))
         self.model = nn.ModuleList(layers)
 
         self.residual = not args.interpolate
@@ -63,4 +63,4 @@ class SimpleGatedCNN(nn.Module):
         if self.residual:   # learn noise residual
             out = out + x
 
-        return out
+        return out.tanh()
