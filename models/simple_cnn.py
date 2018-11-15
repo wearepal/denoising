@@ -23,7 +23,6 @@ class SimpleCNN(nn.Module):
         # Output layer
 
         self.model = nn.Sequential(*layers)
-        self.tanh = nn.Tanh()
         self.residual = not args.interpolate
 
     def forward(self, x, c=None):
@@ -53,7 +52,6 @@ class SimpleGatedCNN(nn.Module):
         layers.append(GatedConvLayer(args.cnn_hidden_channels, args.cnn_in_channels, local_condition=args.iso,
                                      normalize=False, layer_activation=nn.Tanh()))
         self.model = nn.ModuleList(layers)
-        self.tanh = nn.Tanh()
 
         self.residual = not args.interpolate
 
