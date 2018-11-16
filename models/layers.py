@@ -174,7 +174,7 @@ class GatedConvLayer(ConvLayerParent):
         self.local_condition = local_condition
         self.conv_residual = conv_residual
 
-        self.conv = GatedConv2d(in_channels, out_channels, kernel_size, stride, padding, dilation,
+        self.conv = GatedConv2d(in_channels, out_channels, kernel_size, stride, self.padding, dilation,
                                 conv_activation, local_condition, conv_residual)
         self.norm = norm(out_channels, num_norm_groups, num_classes) if normalize else None
 

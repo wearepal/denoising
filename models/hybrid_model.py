@@ -158,7 +158,7 @@ def parse_arguments(raw_args=None):
 
 if __name__ == '__main__':
     x = torch.randn(2, 3, 64, 64)
-    conv = GatedConvLayer(3, 32, dilation=2, conv_residual=False, padding=2)
+    conv = GatedConvLayer(3, 32, dilation=2, conv_residual=True, preserve_size=True)
     print(conv(x).shape)
     # model = HybridGatedCNN(parse_arguments())
     # model(x)
