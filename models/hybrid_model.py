@@ -18,8 +18,8 @@ class HybridGatedCNN(nn.Module):
         # Real stream
         real_layers = [GatedConvLayer(args.cnn_in_channels, num_real_filters)]
         for i in range(stream_length):
-            dilation = 2 ** (i + 1)
-            # dilation = 1
+            # dilation = 2 ** (i + 1)
+            dilation = 1
             real_layer = GatedConvLayer(num_real_filters, num_real_filters,
                                         local_condition=args.iso, dilation=dilation,
                                         preserve_size=True)
@@ -29,7 +29,8 @@ class HybridGatedCNN(nn.Module):
         complex_layers = [ComplexGatedConvLayer(args.cnn_in_channels, num_complex_filters,
                                                 local_condition=args.iso)]
         for i in range(stream_length):
-            dilation = 2 ** (i + 1)  # double dilation factor each layer
+            # dilation = 2 ** (i + 1)  # double dilation factor each layer
+            dilation = 1
             complex_layer = ComplexGatedConvLayer(num_complex_filters, num_complex_filters,
                                                   local_condition=args.iso, dilation=dilation,
                                                   preserve_size=True)
