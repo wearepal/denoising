@@ -65,6 +65,7 @@ class HybridGatedCNN(nn.Module):
         # Convolve over combined output
         out = self.pooling_conv(cat_streams, c)
         out = self.output_conv(out, c)
+        out = out.tanh()
 
         if self.residual:   # learn noise residual
             out = out + x
