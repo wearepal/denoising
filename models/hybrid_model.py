@@ -7,8 +7,7 @@ from models.complex_layers import ComplexGatedConvLayer
 
 class HybridGatedCNN(nn.Module):
     """
-    Simple generator network with gated convolutions and a
-    uniform number of filters throughout the hidden layers.
+    Hybrid dual-stream (one real, one complex) gated CNN
     """
     def __init__(self, args):
         super().__init__()
@@ -39,7 +38,8 @@ class HybridGatedCNN(nn.Module):
         self.pooling_conv = GatedConvLayer(num_real_filters + num_complex_filters, num_real_filters,
                                            local_condition=args.iso)
         self.output_conv = GatedConvLayer(num_real_filters, args.cnn_in_channels,
-                                          normalize=False, layer_activation=None, local_condition=args.iso)
+                                          normalize=False, layer_activation=None,
+                                          local_condition=args.iso)
 
         self.complex_stream = nn.ModuleList(complex_layers)
         self.real_stream = nn.ModuleList(complex_layers)
