@@ -31,7 +31,7 @@ class SimpleCNN(nn.Module):
         if self.residual:   # learn noise residual
             out = out + x
 
-        return out.tanh()
+        return out
 
 
 class SimpleGatedCNN(nn.Module):
@@ -63,4 +63,4 @@ class SimpleGatedCNN(nn.Module):
         if self.residual:   # learn noise residual
             out = out + x
 
-        return out.tanh()
+        return out

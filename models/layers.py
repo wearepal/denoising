@@ -68,7 +68,7 @@ class ConvLayer(ConvLayerParent):
         super().__init__(in_channels, out_channels, kernel_size, stride, padding, dilation,
                          layer_activation, num_norm_groups, num_classes, normalize, preserve_size)
 
-        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, dilation, bias=normalize)
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride, self.padding, dilation, bias=normalize)
         self.norm = norm(out_channels, num_norm_groups, num_classes) if normalize else None
 
 
@@ -97,16 +97,16 @@ class GatedConv2d(nn.Module):
         self.sigmoid = nn.Sigmoid()
 
         if not local_condition:
-            self.conv_features = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, dilation)
-            self.conv_gate = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, dilation)
+            self.conv_features = nn.Conv2d(in_channels, out_channels, kernel_size, stride, self.padding, dilation)
+            self.conv_gate = nn.Conv2d(in_channels, out_channels, kernel_size, stride, self.padding, dilation)
             self.register_parameter('cond_features_bias', None)
             self.register_parameter('cond_gate_bias', None)
         else:
             # Because the conditioning data needs to be incorporated into the bias, bias is set to false
             self.conv_features = nn.Conv2d(in_channels, out_channels, kernel_size, stride,
-                                           padding, dilation, bias=False)
+                                           self.padding, dilation, bias=False)
             self.conv_gate = nn.Conv2d(in_channels, out_channels, kernel_size, stride,
-                                       padding, dilation, bias=False)
+                                       self.padding, dilation, bias=False)
             self.cond_features_bias = nn.Parameter(torch.Tensor(out_channels))
             self.cond_gate_bias = nn.Parameter(torch.Tensor(out_channels))
             self.reset_parameters()
@@ -174,7 +174,7 @@ class GatedConvLayer(ConvLayerParent):
         self.local_condition = local_condition
         self.conv_residual = conv_residual
 
-        self.conv = GatedConv2d(in_channels, out_channels, kernel_size, stride, padding, dilation,
+        self.conv = GatedConv2d(in_channels, out_channels, kernel_size, stride, self.padding, dilation,
                                 conv_activation, local_condition, conv_residual)
         self.norm = norm(out_channels, num_norm_groups, num_classes) if normalize else None
 

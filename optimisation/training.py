@@ -135,13 +135,13 @@ def validate(args, val_loader, model, criterion, training_iters, summary_writer)
 def log_images(noisy_image, denoised_image, clean_image,
                summary_writer, n_samples, training_iters, prefix):
     summary_writer.add_image(
-        str(prefix) + '/noisy_images', vutils.make_grid(noisy_image.data[:n_samples], normalize=True,
-                                                        scale_each=True), training_iters)
-    summary_writer.add_image(
         str(prefix) + '/denoised_images', vutils.make_grid(denoised_image.data[:n_samples], normalize=True,
                                                            scale_each=True), training_iters)
     summary_writer.add_image(
         str(prefix) + '/clean_images', vutils.make_grid(clean_image.data[:n_samples], normalize=True,
+                                                        scale_each=True), training_iters)
+    summary_writer.add_image(
+        str(prefix) + '/noisy_images', vutils.make_grid(noisy_image.data[:n_samples], normalize=True,
                                                         scale_each=True), training_iters)
 
 
@@ -204,7 +204,7 @@ def evaluate_psnr_and_vgg_loss(args, model, data_loader):
     average_vgg_loss = vgg_loss_meter.mean
     # Write average loss to tensorboard
     print("===> Average PSNR score: {:4f}".format(average_psnr))
-    print("===> Average SSIM score: {:4f}".format(average_ssim))
+    print("===> Average SSIM score: {:.4f}".format(average_ssim))
     print("===> Average VGG loss: {:4f}".format(average_vgg_loss))
     print("===> Average batch time: {:.4f}".format(batch_time_meter.mean))
     # TODO: Save results to a csv/text file
