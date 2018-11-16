@@ -61,7 +61,7 @@ class ComplexConvLayer(ConvLayerParent):
         super().__init__(in_channels, out_channels, kernel_size, stride, padding, dilation,
                          layer_activation, num_norm_groups, num_classes, normalize, preserve_size)
 
-        self.conv = ComplexConv2d(in_channels, out_channels, kernel_size, stride, padding, dilation, bias=normalize)
+        self.conv = ComplexConv2d(in_channels, out_channels, kernel_size, stride, self.padding, dilation, bias=normalize)
         self.norm = complex_norm(out_channels, num_classes) if normalize else None
 
 
@@ -169,7 +169,7 @@ class ComplexGatedConvLayer(ConvLayerParent):
         self.local_condition = local_condition
         self.conv_residual = conv_residual
 
-        self.conv = ComplexGatedConv2d(in_channels, out_channels, kernel_size, stride, padding, dilation,
+        self.conv = ComplexGatedConv2d(in_channels, out_channels, kernel_size, stride, self.padding, dilation,
                                        conv_activation, local_condition, conv_residual)
         self.norm = complex_norm(out_channels, num_classes) if normalize else None
 
