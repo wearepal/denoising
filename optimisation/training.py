@@ -151,7 +151,7 @@ def evaluate_psnr_and_vgg_loss(args, model, data_loader):
     vgg_loss_meter = AverageValueMeter()
 
     psnr_calculator = PSNR(data_range=1)
-    vgg_loss_calculator = VGGLoss(args.vgg_feature_layer)
+    vgg_loss_calculator = VGGLoss(args)
     if args.cuda:
         psnr_calculator.cuda()
         vgg_loss_calculator.cuda()
