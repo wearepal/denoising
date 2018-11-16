@@ -51,7 +51,7 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
                 # TODO: set num_samples_to_log to equal batch size if exceeding it
                 if args.train_batch_size >= args.num_samples_to_log:
                     log_images(noisy, denoised, clean, summary_writer,
-                               args.num_samples_to_log, (epoch * steps) + i)
+                               args.num_samples_to_log, (epoch * steps) + i, 'Train')
 
             # Update progress bar
             pbar.set_postfix(loss=loss_meter.mean)
@@ -115,7 +115,7 @@ def validate(args, val_loader, model, criterion, training_iters, summary_writer)
                 if i == 0:
                     if args.test_batch_size >= args.num_samples_to_log:
                         log_images(noisy, denoised, clean, summary_writer,
-                                   args.num_samples_to_log, training_iters)
+                                   args.num_samples_to_log, training_iters, 'Val')
 
                 # Update progress bar
                 pbar.set_postfix(loss=loss_meter.mean)
@@ -132,16 +132,16 @@ def validate(args, val_loader, model, criterion, training_iters, summary_writer)
 
 
 def log_images(noisy_image, denoised_image, clean_image,
-               summary_writer, n_samples, training_iters):
+               summary_writer, n_samples, training_iters, prefix):
     summary_writer.add_image(
-        'noisy_images', vutils.make_grid(noisy_image.data[:n_samples], normalize=True,
-                                         scale_each=True), training_iters)
+        str(prefix) + '/noisy_images', vutils.make_grid(noisy_image.data[:n_samples], normalize=True,
+                                                        scale_each=True), training_iters)
     summary_writer.add_image(
-        'denoised_images', vutils.make_grid(denoised_image.data[:n_samples], normalize=True,
-                                            scale_each=True), training_iters)
+        str(prefix) + '/denoised_images', vutils.make_grid(denoised_image.data[:n_samples], normalize=True,
+                                                           scale_each=True), training_iters)
     summary_writer.add_image(
-        'clean_images', vutils.make_grid(clean_image.data[:n_samples], normalize=True,
-                                         scale_each=True), training_iters)
+        str(prefix) + '/clean_images', vutils.make_grid(clean_image.data[:n_samples], normalize=True,
+                                                        scale_each=True), training_iters)
 
 
 def evaluate_psnr_and_vgg_loss(args, model, data_loader):

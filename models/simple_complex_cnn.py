@@ -37,6 +37,5 @@ class SimpleComplexGatedCNN(nn.Module):
             out = out + fourier_x
         # inverse fourier transform
         out = torch.irfft(out, signal_ndim=2, signal_sizes=x.shape[2:])
-        out = out.tanh()
 
         return out
