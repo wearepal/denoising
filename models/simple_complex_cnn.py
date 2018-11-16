@@ -27,15 +27,16 @@ class SimpleComplexGatedCNN(nn.Module):
         self.residual = not args.interpolate
 
     def forward(self, x, c=None, class_labels=None):
-        out = torch.rfft(x, signal_ndim=2)
+        fourier_x = torch.rfft(x, signal_ndim=2)
 
+        out = fourier_x
         for layer in self.model:
             out = layer(out, c)
+
+        if self.residual:   # learn noise residual
+            out = out + fourier_x
         # inverse fourier transform
         out = torch.irfft(out, signal_ndim=2, signal_sizes=x.shape[2:])
         out = out.tanh()
-
-        if self.residual:   # learn noise residual
-            out = out + x
 
         return out
