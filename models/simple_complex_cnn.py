@@ -39,7 +39,6 @@ class SimpleComplexGatedCNN(nn.Module):
 
         out = self.real_conv1(out, c)
         out = self.real_conv2(out, c)
-        out = out.tanh()
 
         if self.residual:   # learn noise residual
             out = out + x

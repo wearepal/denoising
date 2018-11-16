@@ -31,7 +31,6 @@ class DGatedResNet(nn.Module):
         for layer in self.model:
             out = layer(out, c, class_labels)
 
-        out = out.tanh()
         if self.residual:   # learn noise residual
             out = out + x   # Should we apply tanh again after adding the residual?
 

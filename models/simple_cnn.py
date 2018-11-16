@@ -28,11 +28,10 @@ class SimpleCNN(nn.Module):
     def forward(self, x, c=None, class_labels=None):
         out = self.model(x)
 
-        out = out.tanh()
         if self.residual:   # learn noise residual
             out = out + x
 
-        return out.tanh()
+        return out
 
 
 class SimpleGatedCNN(nn.Module):
@@ -61,7 +60,6 @@ class SimpleGatedCNN(nn.Module):
         for layer in self.model:
             out = layer(out, c, class_labels)
 
-        out = out.tanh()
         if self.residual:   # learn noise residual
             out = out + x
 
