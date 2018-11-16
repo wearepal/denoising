@@ -9,7 +9,7 @@ class HybridGatedCNN(nn.Module):
     """
     Hybrid dual-stream (one real, one complex) gated CNN
     """
-    def __init__(self, args, stream_lenth=3):
+    def __init__(self, args, stream_length=3):
         super().__init__()
 
         num_real_filters = args.cnn_hidden_channels
@@ -17,7 +17,7 @@ class HybridGatedCNN(nn.Module):
 
         # Real stream
         real_layers = [GatedConvLayer(args.cnn_in_channels, num_real_filters)]
-        for i in range(stream_lenth):
+        for i in range(stream_length):
             dilation = 2 * (i + 1)  # double dilation factor each layer
             real_layer = GatedConvLayer(num_real_filters, num_real_filters,
                                         local_condition=args.iso, dilation=dilation,
@@ -27,7 +27,7 @@ class HybridGatedCNN(nn.Module):
         # Complex stream
         complex_layers = [ComplexGatedConvLayer(args.cnn_in_channels, num_complex_filters,
                                                 local_condition=args.iso)]
-        for i in range(stream_lenth):
+        for i in range(stream_length):
             dilation = 2 * (i + 1)  # double dilation factor each layer
             complex_layer = ComplexGatedConvLayer(num_complex_filters, num_complex_filters,
                                                   local_condition=args.iso, dilation=dilation,
