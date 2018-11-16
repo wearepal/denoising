@@ -27,26 +27,26 @@ def main(patches, patch_size, old_path=None, new_path=None):
 
     transformed_path.mkdir()
     data = HuaweiDataset(root_dir=root_path)
-    iso_data = [("folder_idx", "iso")]
+    image_data = [("folder_idx", "iso", "class")]
     dataset_info_writer = _get_dataset_info_writer(transformed_path, patches)
-    for image_no, pair in enumerate(tqdm(data)):
-        iso_data.append((image_no, pair['iso']))
+    for image_no, sample in enumerate(tqdm(data)):
+        image_data.append((image_no, sample['iso'], sample['class']))
         clean_path = transformed_path / str(image_no) / "clean"
         clean_path.mkdir(parents=True)
         noisy_path = transformed_path / str(image_no) / "noisy"
         noisy_path.mkdir()
         seed(image_no)
         for i in range(patches):
-            clean = transform(pair['clean'])
+            clean = transform(sample['clean'])
             clean.save(clean_path / f"{i}.png")
         seed(image_no)
         for i in range(patches):
-            noisy = transform(pair['noisy'])
+            noisy = transform(sample['noisy'])
             noisy.save(noisy_path / f"{i}.png")
-        dataset_info_writer(noisy_path, clean_path, pair['iso'])
+        dataset_info_writer(noisy_path, clean_path, sample['iso'])
     with open(Path(transformed_path).resolve() / "info.csv", 'w') as csv_file:
         writer = csv.writer(csv_file)
-        writer.writerows(iso_data)
+        writer.writerows(image_data)
 
 
 def _get_dataset_info_writer(transformed_path, patches):
