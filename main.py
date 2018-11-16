@@ -10,14 +10,19 @@ from torch.utils.data import DataLoader
 from tensorboardX import SummaryWriter
 from torchvision import transforms
 
+from optimisation.testing import test
 from optimisation.training import train, validate, evaluate_psnr_and_vgg_loss
 from optimisation import loss
-from utils import TransformedHuaweiDataset
+from utils import TransformedHuaweiDataset, transform_sample
 import models
 
 
 def parse_arguments(raw_args=None):
     parser = argparse.ArgumentParser()
+
+    parser.add_argument('-t', '--run_on_test', nargs='+',
+                        help='Evaluate a model (checkpoint) on test set. '
+                        'Args: Checkpoint path, Test data path[, Save path]')
 
     parser.add_argument('-dd', '--data_dir', help='location of transformed data')
     parser.add_argument('-ts', '--test_split', help='Fraction of data to be used for validation',
@@ -87,9 +92,9 @@ def parse_arguments(raw_args=None):
     args.cuda = not args.no_cuda and torch.cuda.is_available()
     args.iso = not args.no_iso
 
-    # Random seeding
     if args.manual_seed is None:
         args.manual_seed = random.randint(1, 100000)
+
     return args
 
 
@@ -97,12 +102,15 @@ def main(args):
     random.seed(args.manual_seed)
     np.random.seed(args.manual_seed)
     torch.manual_seed(args.manual_seed)
-    torch.cuda.manual_seed_all(args.manual_seed)
-
+    torch.cuda.manual_seed_all(args.manual_seed)    
     if args.cuda:
         # gpu device number
         torch.cuda.set_device(args.gpu_num)
 
+    if args.run_on_test:
+        test(args, transform_sample)
+        return
+    
     # Create results path
     if args.save_dir: # If specified
         save_path = Path(args.save_dir).resolve()
@@ -112,25 +120,6 @@ def main(args):
     save_path.mkdir()  # Will throw an exception if the path exists OR the parent path _doesn't_
 
     kwargs = {'pin_memory': True} if args.cuda else {}
-
-    # Define transforms:
-    noisy_transforms = transforms.Compose(
-        [transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-         ])
-
-    clean_transforms = transforms.Compose(
-        [transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-         ])
-
-    def _transform_sample(sample):
-        transformed_sample = {
-            'clean': clean_transforms(sample['clean']),
-            'noisy': noisy_transforms(sample['noisy']),
-            'iso': torch.FloatTensor([(sample['iso'] - 1215.32) / 958.13])   # (x - mean) / std
-        }
-        return transformed_sample
 
     print('\nMODEL SETTINGS: \n', args, '\n')
     print("Random Seed: ", args.manual_seed)
@@ -147,7 +136,7 @@ def main(args):
     criterion = criterion_constructor(args) if args.args_to_loss else criterion_constructor()
     criterion = criterion.cuda() if args.cuda else criterion
 
-    dataset = TransformedHuaweiDataset(root_dir=args.data_dir, transform=_transform_sample)
+    dataset = TransformedHuaweiDataset(root_dir=args.data_dir, transform=transform_sample)
     train_dataset, val_dataset = dataset.random_split(test_ratio=args.test_split,
                                                       data_subset=args.data_subset)
 
