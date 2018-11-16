@@ -19,7 +19,7 @@ class HybridGatedCNN(nn.Module):
         real_layers = [GatedConvLayer(args.cnn_in_channels, num_real_filters)]
         for i in range(stream_lenth):
             dilation = 2 * (i + 1)  # double dilation factor each layer
-            real_layer = GatedConvLayer(num_complex_filters, num_complex_filters,
+            real_layer = GatedConvLayer(num_real_filters, num_real_filters,
                                         local_condition=args.iso, dilation=dilation,
                                         preserve_size=True)
             real_layers.append(real_layer)
