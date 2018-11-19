@@ -206,6 +206,7 @@ class CsvLoader(Dataset):
 def transform_sample(sample):
     """Transformation for sample dict, should be used for test data as well as train"""
     # Define transforms:
+    class_values = {'building': 0, 'foliage': 1, 'text': 2}
     noisy_transforms = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
@@ -218,8 +219,8 @@ def transform_sample(sample):
         'clean': clean_transforms(sample['clean']) if 'clean' in sample else None,
         'noisy': noisy_transforms(sample['noisy']),
         'iso': torch.FloatTensor([(sample['iso'] - 1215.32) / 958.13]),   # (x - mean) / std,
-        'class': torch.tensor(sample['class'])
+        'class': sample['class']
     }
-
+    print(type(transformed_sample['class']))
     return {k: v for k, v in transformed_sample.items() if v is not None}
 
