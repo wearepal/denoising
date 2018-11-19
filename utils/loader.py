@@ -174,7 +174,7 @@ class CsvLoader(Dataset):
         self.root_path = full_path.parent
         self.info_df = pd.read_csv(full_path)
 
-        self.class_values = {'buildings': 0, 'foliage': 1, 'text': 2}
+        self.class_values = {'building': 0, 'foliage': 1, 'text': 2}
 
     def __len__(self):
         return len(self.info_df)
@@ -190,7 +190,7 @@ class CsvLoader(Dataset):
             'clean': transforms.functional.to_tensor(clean_image),
             'noisy': transforms.functional.to_tensor(noisy_image),
             'iso': torch.tensor(self.info_df.iloc[idx]['iso'], dtype=torch.float32),
-            'class': torch.FloatTensor(self.info_df.iloc[idx]['class'].replace(self.class_values))
+            'class': torch.tensor(self.info_df.iloc[idx]['class'].replace(self.class_values))
         }
 
     def random_split(self, test_ratio=0.5, seed=None):
@@ -222,3 +222,4 @@ def transform_sample(sample):
     }
     print(transformed_sample['class'])
     return {k:v for k,v in transformed_sample.items() if v is not None}
+
