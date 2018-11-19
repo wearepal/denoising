@@ -399,19 +399,8 @@ class ConditionalNorm(nn.Module):
         self.embed.weight.data[:, num_features:].zero_()    # Initialise bias at 0
 
     def forward(self, x, class_labels):
-        print('==========')
-        print(class_labels.shape, self.num_classes)
         out = self.norm(x)
         gamma, beta = self.embed(class_labels).chunk(2, 1)
         out = gamma.view(-1, self.num_features, 1, 1) * out + beta.view(-1, self.num_features, 1, 1)
 
         return out
-
-
-# import torch
-if __name__ == '__main__':
-    y = torch.LongTensor([0, 1, 0, 2, 1])
-    print(y.shape)
-    x = torch.randn(5, 3, 6, 6)
-    bn = ConditionalNorm(num_features=3, num_classes=3)
-    bn(x, y)
