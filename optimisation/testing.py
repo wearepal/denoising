@@ -38,7 +38,7 @@ def test(args, sample_transform):
         for img_no, sample in enumerate(tqdm(test_loader)):
             noisy = sample['noisy']
             iso = sample['iso']
-            class_labels = sample['class']
+            class_labels = sample['class'].view(-1)
 
             noisy = noisy.cuda() if args.cuda else noisy
             iso = iso.cuda() if args.cuda else iso
