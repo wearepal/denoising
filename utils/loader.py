@@ -220,5 +220,5 @@ def transform_sample(sample):
         'iso': torch.FloatTensor([(sample['iso'] - 1215.32) / 958.13]),   # (x - mean) / std,
         'class': sample['class']
     }
-    print(transform_sample['class'])
+    print(transformed_sample['class'])
     return {k:v for k,v in transformed_sample.items() if v is not None}
