@@ -27,7 +27,7 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
             clean = sample['clean']
             iso = sample['iso']
             class_labels = sample['class']
-
+            print(class_labels.shape)
             # Send inputs to correct device
             noisy = noisy.cuda() if args.cuda else noisy
             clean = clean.cuda() if args.cuda else clean
