@@ -190,7 +190,7 @@ class CsvLoader(Dataset):
             'clean': transforms.functional.to_tensor(clean_image),
             'noisy': transforms.functional.to_tensor(noisy_image),
             'iso': torch.tensor(self.info_df.iloc[idx]['iso'], dtype=torch.float32),
-            'class': torch.tensor(self.class_values[self.info_df.iloc[idx]['class']])
+            'class': self.class_values[self.info_df.iloc[idx]['class']]
         }
 
     def random_split(self, test_ratio=0.5, seed=None):
@@ -218,6 +218,6 @@ def transform_sample(sample):
         'clean': clean_transforms(sample['clean']) if 'clean' in sample else None,
         'noisy': noisy_transforms(sample['noisy']),
         'iso': torch.FloatTensor([(sample['iso'] - 1215.32) / 958.13]),   # (x - mean) / std,
-        'class': sample['class']
+        'class': torch.LongTensor(sample['class'])
     }
     return {k:v for k,v in transformed_sample.items() if v is not None}
