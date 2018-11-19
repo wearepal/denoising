@@ -8,7 +8,6 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from tensorboardX import SummaryWriter
-from torchvision import transforms
 
 from optimisation.testing import test
 from optimisation.training import train, validate, evaluate_psnr_and_vgg_loss
