@@ -32,7 +32,6 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
             noisy = noisy.cuda() if args.cuda else noisy
             clean = clean.cuda() if args.cuda else clean
             iso = iso.cuda() if args.cuda else iso
-            print(class_labels)
             class_labels = class_labels.cuda() if args.cuda else class_labels
 
             # Clear past gradients

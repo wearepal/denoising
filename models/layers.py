@@ -388,9 +388,9 @@ class ConditionalNorm(nn.Module):
         self.num_features = num_features
 
         if num_groups > 0:
-            self.norm = nn.BatchNorm2d(num_features, affine=False)
-        else:
             self.norm = nn.GroupNorm(num_channels=num_features, num_groups=num_groups, affine=False)
+        else:
+            self.norm = nn.BatchNorm2d(num_features, affine=False)
 
         self.embed = nn.Embedding(num_classes, num_features * 2)
         self.embed.weight.data[:, :num_features].normal_(1, 0.02)  # Initialise scale at N(1, 0.02)

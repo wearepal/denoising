@@ -203,10 +203,12 @@ class CsvLoader(Dataset):
         return Subset(self, train_idx), Subset(self, test_idx)
 
 
+class_values = {'building': 0, 'foliage': 1, 'text': 2}
+
+
 def transform_sample(sample):
     """Transformation for sample dict, should be used for test data as well as train"""
     # Define transforms:
-    class_values = {'building': 0, 'foliage': 1, 'text': 2}
     noisy_transforms = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
