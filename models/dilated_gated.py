@@ -5,8 +5,7 @@ from models import GatedConvLayer
 
 class DilatedGatedCNN(nn.Module):
     """
-    Simple generator network with gated convolutions and a
-    uniform number of filters throughout the hidden layers.
+    Gated Conv Network with increasing dilation factor
     """
     def __init__(self, args):
         super().__init__()
