@@ -24,7 +24,7 @@ class TransformedHuaweiDataset(Dataset):
             self.root_dir = Path(__file__).resolve().parent.parent.parent / "data" / "transformed"
         if not self.root_dir.is_dir():
             raise ValueError("No valid top directory specified")
-        self.info_df = pd.read_csv(self.root_dir / "info.csv")
+        self.info_df = pd.read_csv(self.root_dir / "Training_Info.csv")
         self.n_originals = len(self.info_df)
         self.patches = len([_ for _ in Path(self.root_dir / "0" / "clean").iterdir()])
         self.len = self.n_originals * self.patches
@@ -38,7 +38,7 @@ class TransformedHuaweiDataset(Dataset):
         clean_location, noisy_location = self._get_image_locations(idx)
         clean_image = Image.open(clean_location)
         noisy_image = Image.open(noisy_location)
-        iso = self.info_df.iloc[idx//self.patches]['iso']
+        iso = self.info_df.iloc[idx//self.patches]['ISO_Info']
         image_class = self.info_df.iloc[idx//self.patches]['Class_Info']
         sample = {
             'clean': clean_image,
