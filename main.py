@@ -83,6 +83,8 @@ def parse_arguments(raw_args=None):
                         help='interpolate rather than learn noise as an image residual')
     parser.add_argument('-ni', '--no_iso', action='store_true', default=False,
                         help='not to use image ISO values as extra conditioning data')
+    parser.add_argument('--use_class', action='store_true', default=False,
+                        help='use the class information of images')
 
     # VGG loss
     parser.add_argument('--vgg_feature_layer', type=int, default=11,
@@ -91,6 +93,7 @@ def parse_arguments(raw_args=None):
     args = parser.parse_args(raw_args)
     args.cuda = not args.no_cuda and torch.cuda.is_available()
     args.iso = not args.no_iso
+    args.num_classes = 3 if args.use_class else 0
 
     if args.manual_seed is None:
         args.manual_seed = random.randint(1, 100000)

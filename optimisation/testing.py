@@ -2,10 +2,10 @@ from tqdm import tqdm
 from utils.loader import TestDataset
 from torch.utils.data import DataLoader
 from pathlib import Path
-import torch
 import models
 import torch
 import torchvision.transforms.functional as F
+
 
 def test(args, sample_transform):
     model_path = Path(args.run_on_test[0]).resolve()
@@ -34,15 +34,17 @@ def test(args, sample_transform):
     test_dataset = TestDataset(args.run_on_test[1], transform=sample_transform)
     test_loader = DataLoader(test_dataset, num_workers=args.workers, pin_memory=args.cuda)
 
-
     with torch.no_grad():
         for img_no, sample in enumerate(tqdm(test_loader)):
             noisy = sample['noisy']
-            noisy = noisy.cuda() if args.cuda else noisy
             iso = sample['iso']
-            iso = iso.cuda() if args.cuda else iso
+            class_labels = sample['class']
 
-            denoised = model(noisy, iso)
+            noisy = noisy.cuda() if args.cuda else noisy
+            iso = iso.cuda() if args.cuda else iso
+            class_labels = class_labels.cuda() if args.cuda else class_labels
+
+            denoised = model(noisy, iso, class_labels)
             denoised = torch.clamp(((denoised * 0.5) + 0.5), min=0, max=1)
             denoised = denoised.cpu()
             im = F.to_pil_image(torch.squeeze(denoised))

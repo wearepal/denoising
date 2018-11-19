@@ -19,12 +19,13 @@ class SimpleComplexGatedCNN(nn.Module):
         # Hidden layers
         for _ in range(args.cnn_num_hidden_layers):
             layers.append(ComplexGatedConvLayer(args.cnn_hidden_channels, args.cnn_hidden_channels,
-                                                local_condition=args.iso))
+                                                local_condition=args.iso, num_classes=args.num_classes))
 
         self.real_conv1 = GatedConvLayer(args.cnn_hidden_channels, args.cnn_hidden_channels * 2,
-                                         local_condition=args.iso)
+                                         local_condition=args.iso, num_classes=args.num_classes)
         self.real_conv2 = GatedConvLayer(args.cnn_hidden_channels * 2, args.cnn_in_channels,
-                                         normalize=False, layer_activation=None, local_condition=args.iso)
+                                         normalize=False, layer_activation=None,
+                                         local_condition=args.iso, num_classes=args.num_classes)
         self.model = nn.ModuleList(layers)
 
         self.residual = not args.interpolate
