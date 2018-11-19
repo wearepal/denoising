@@ -23,7 +23,7 @@ class SimpleComplexGatedCNN(nn.Module):
 
         self.real_conv1 = GatedConvLayer(args.cnn_hidden_channels, args.cnn_hidden_channels * 2,
                                          local_condition=args.iso)
-        self.real_conv2 = GatedConvLayer(args.cnn_hidden_channels, args.cnn_in_channels,
+        self.real_conv2 = GatedConvLayer(args.cnn_hidden_channels * 2, args.cnn_in_channels,
                                          normalize=False, layer_activation=None, local_condition=args.iso)
         self.model = nn.ModuleList(layers)
 
