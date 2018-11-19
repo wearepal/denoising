@@ -402,3 +402,12 @@ class ConditionalNorm(nn.Module):
         out = gamma.view(-1, self.num_features, 1, 1) * out + beta.view(-1, self.num_features, 1, 1)
 
         return out
+
+
+# import torch
+if __name__ == '__main__':
+    y = torch.LongTensor([0, 1, 0, 2, 1])
+    print(y.shape)
+    x = torch.randn(5, 3, 6, 6)
+    bn = ConditionalNorm(num_features=3, num_classes=3)
+    bn(x, y)

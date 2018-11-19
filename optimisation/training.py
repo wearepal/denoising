@@ -33,6 +33,7 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
             clean = clean.cuda() if args.cuda else clean
             iso = iso.cuda() if args.cuda else iso
             class_labels = class_labels.cuda() if args.cuda else class_labels
+            print(class_labels.shape)
 
             # Clear past gradients
             optimizer.zero_grad()
