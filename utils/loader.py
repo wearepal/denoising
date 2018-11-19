@@ -190,7 +190,7 @@ class CsvLoader(Dataset):
             'clean': transforms.functional.to_tensor(clean_image),
             'noisy': transforms.functional.to_tensor(noisy_image),
             'iso': torch.tensor(self.info_df.iloc[idx]['iso'], dtype=torch.float32),
-            'class': torch.tensor(self.info_df.iloc[idx]['class'].replace(self.class_values))
+            'class': torch.LongTensor(self.info_df.iloc[idx]['class'].replace(self.class_values))
         }
 
     def random_split(self, test_ratio=0.5, seed=None):

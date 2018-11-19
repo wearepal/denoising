@@ -386,6 +386,8 @@ class ConditionalNorm(nn.Module):
     def __init__(self, num_features, num_classes, num_groups=0):
         super().__init__()
         self.num_features = num_features
+        self.num_classes = num_classes
+        self.num_groups = num_groups
 
         if num_groups > 0:
             self.norm = nn.GroupNorm(num_channels=num_features, num_groups=num_groups, affine=False)
@@ -397,6 +399,8 @@ class ConditionalNorm(nn.Module):
         self.embed.weight.data[:, num_features:].zero_()    # Initialise bias at 0
 
     def forward(self, x, class_labels):
+        print('==========')
+        print(class_labels.shape, self.num_classes)
         out = self.norm(x)
         gamma, beta = self.embed(class_labels).chunk(2, 1)
         out = gamma.view(-1, self.num_features, 1, 1) * out + beta.view(-1, self.num_features, 1, 1)

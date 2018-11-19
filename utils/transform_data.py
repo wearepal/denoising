@@ -4,7 +4,7 @@ import csv
 from random import seed
 from torchvision import transforms
 from tqdm import tqdm
-from loader import HuaweiDataset
+from utils.loader import HuaweiDataset
 
 
 def main(patches, patch_size, old_path=None, new_path=None):
