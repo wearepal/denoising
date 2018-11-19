@@ -180,7 +180,7 @@ def evaluate_psnr_and_vgg_loss(args, model, data_loader):
                 noisy = sample['noisy']
                 clean = sample['clean']
                 iso = sample['iso']
-                class_labels = sample['class'].view()
+                class_labels = sample['class'].view(-1)
 
                 # Send inputs to correct device
                 noisy = noisy.cuda() if args.cuda else noisy
