@@ -5,8 +5,7 @@ from models.layers import GatedResidualBLock, GatedConvLayer
 
 class DGatedResNet(nn.Module):
     """
-    Simple generator network with gated convolutions and a
-    uniform number of filters throughout the hidden layers.
+    Residual network with increasing dilation factor and gated convolutions.
     """
     def __init__(self, args):
         super().__init__()
@@ -20,7 +19,7 @@ class DGatedResNet(nn.Module):
                                              dilation=dilation, local_condition=args.iso))
         # Output layer
         layers.append(GatedConvLayer(args.cnn_hidden_channels, args.cnn_in_channels, dilation=1,
-                                     normalize=False, layer_activation=nn.Tanh(), local_condition=args.iso))
+                                     normalize=False, layer_activation=None, local_condition=args.iso))
         self.model = nn.ModuleList(layers)
 
         self.residual = True
