@@ -27,10 +27,8 @@ def main(patches, patch_size, old_path=None, new_path=None):
 
     transformed_path.mkdir()
     data = HuaweiDataset(root_dir=root_path)
-    image_data = [("folder_idx", "iso", "class")]
     dataset_info_writer = _get_dataset_info_writer(transformed_path, patches)
     for image_no, sample in enumerate(tqdm(data)):
-        image_data.append((image_no, sample['iso'], sample['class']))
         clean_path = transformed_path / str(image_no) / "clean"
         clean_path.mkdir(parents=True)
         noisy_path = transformed_path / str(image_no) / "noisy"
@@ -43,23 +41,21 @@ def main(patches, patch_size, old_path=None, new_path=None):
         for i in range(patches):
             noisy = transform(sample['noisy'])
             noisy.save(noisy_path / f"{i}.png")
-        dataset_info_writer(noisy_path, clean_path, sample['iso'])
-    with open(Path(transformed_path).resolve() / "info.csv", 'w') as csv_file:
-        writer = csv.writer(csv_file)
-        writer.writerows(image_data)
+        dataset_info_writer(noisy_path, clean_path, sample['iso'], sample['class'])
+    data.info_df.to_csv(str(transformed_path / "Training_Data.csv"), index=False)
 
 
 def _get_dataset_info_writer(transformed_path, patches):
     base_path = transformed_path.resolve()
     csv_path = base_path / "dataset.csv"
     with csv_path.open('w') as csv_file:  # reset CSV file by writing the heading
-        csv.writer(csv_file).writerows([("noisy_path", "clean_path", "iso")])
+        csv.writer(csv_file).writerows([("noisy_path", "clean_path", "iso", "class")])
 
-    def _write_dataset_info(noisy_path, clean_path, iso):
+    def _write_dataset_info(noisy_path, clean_path, iso, image_class):
         # relative paths
         noisy_rel = noisy_path.resolve().relative_to(base_path)
         clean_rel = clean_path.resolve().relative_to(base_path)
-        dataset_info = [(noisy_rel / f"{i}.png", clean_rel / f"{i}.png", iso)
+        dataset_info = [(noisy_rel / f"{i}.png", clean_rel / f"{i}.png", iso, image_class)
                         for i in range(patches)]
         with csv_path.open('a') as csv_file:  # append to the CSV file
             csv.writer(csv_file).writerows(dataset_info)
