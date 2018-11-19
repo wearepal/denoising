@@ -219,8 +219,8 @@ def transform_sample(sample):
         'clean': clean_transforms(sample['clean']) if 'clean' in sample else None,
         'noisy': noisy_transforms(sample['noisy']),
         'iso': torch.FloatTensor([(sample['iso'] - 1215.32) / 958.13]),   # (x - mean) / std,
-        'class': torch.Tensor(class_values[sample['class']])
+        'class': torch.LongTensor([class_values[sample['class']]])
     }
-    print(transformed_sample['iso'].shape, transformed_sample['class'].shape)
+
     return {k: v for k, v in transformed_sample.items() if v is not None}
 
