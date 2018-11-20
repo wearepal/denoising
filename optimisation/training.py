@@ -26,7 +26,7 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
             noisy = sample['noisy']
             clean = sample['clean']
             iso = sample['iso']
-            class_labels = sample['class'].view(-1)
+            class_labels = sample['class'].squeeze(-1)
 
             # Send inputs to correct device
             noisy = noisy.cuda() if args.cuda else noisy
@@ -101,7 +101,7 @@ def validate(args, val_loader, model, criterion, training_iters, summary_writer)
                 noisy = sample['noisy']
                 clean = sample['clean']
                 iso = sample['iso']
-                class_labels = sample['class'].view(-1)
+                class_labels = sample['class'].squeeze(-1)
 
                 # Send inputs to correct device
                 noisy = noisy.cuda() if args.cuda else noisy
@@ -180,7 +180,7 @@ def evaluate_psnr_and_vgg_loss(args, model, data_loader):
                 noisy = sample['noisy']
                 clean = sample['clean']
                 iso = sample['iso']
-                class_labels = sample['class'].view(-1)
+                class_labels = sample['class'].squeeze(-1)
 
                 # Send inputs to correct device
                 noisy = noisy.cuda() if args.cuda else noisy
