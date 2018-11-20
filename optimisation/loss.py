@@ -131,9 +131,3 @@ class EdgeAwareLoss(nn.Module):
         edge_map_clean = self.sobel(clean)
         edge_loss = self.criterion(edge_map_noisy, edge_map_clean)
         return self.criterion(noisy, clean) + self.weight * edge_loss
-
-
-x = torch.randn(10, 3, 12, 12)
-y = torch.randn(10, 3, 12, 12)
-loss = EdgeAwareLoss()
-print(loss(x, y))
