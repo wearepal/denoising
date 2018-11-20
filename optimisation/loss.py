@@ -101,12 +101,12 @@ class SobelMagnitude(nn.Module):
         self.eps = eps
 
         kernel_x = torch.FloatTensor([[1, 0, -1], [2, 0, -2], [1, 0, -1]])[None][None]
-        kernel_x = kernel_x.expand(in_channels, out_channels, -1, -1)
+        kernel_x = kernel_x.expand(out_channels, in_channels, -1, -1)
         self.sobel_x = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False)
         self.sobel_x.weight = nn.Parameter(kernel_x, requires_grad=False)
 
         kernel_y = torch.FloatTensor([[1, 2, 1], [0, 0, 0], [-1, -2, -1]])[None][None]
-        kernel_y = kernel_y.expand(in_channels, out_channels, -1, -1)
+        kernel_y = kernel_y.expand(out_channels, in_channels, -1, -1)
         self.sobel_y = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False)
         self.sobel_y.weight = nn.Parameter(kernel_y, requires_grad=False)
 
