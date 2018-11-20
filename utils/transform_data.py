@@ -83,14 +83,16 @@ def calculate_strides(imagesize, patchsize, overlap):
     if type(overlap) == int:
         overlap = (overlap, overlap)
     vertical_stride = patchsize[0] - (overlap[0] // 2)
-    n_vertical_strides = imagesize[0] // vertical_stride
+    n_vertical_strides = -(-imagesize[0] // vertical_stride)
     horizontal_stride = patchsize[1] - (overlap[1] // 2)
-    n_horizontal_stride = imagesize[1] // horizontal_stride
+    n_horizontal_stride = -(-imagesize[1] // horizontal_stride)
 
     strides = []
     for i in range(n_vertical_strides):
         for j in range(n_horizontal_stride):
-            strides.append((i*vertical_stride, j*horizontal_stride))
+            top = min(i*vertical_stride, imagesize[0] - patchsize[0])
+            left = min(j*horizontal_stride, imagesize[1] - patchsize[1])
+            strides.append((top, left))
     return strides
 
 
