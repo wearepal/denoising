@@ -95,13 +95,15 @@ class SobelMagnitude(nn.Module):
     def __init__(self, in_channels, out_channels=None):
         super().__init__()
 
+        self.in_channels = in_channels
         out_channels = in_channels if out_channels is None else out_channels
+
         kernel_x = torch.FloatTensor([[1, 0, -1], [2, 0, -2], [1, 0, -1]])[None][None]
         kernel_x = kernel_x.expand(in_channels, out_channels, -1, -1)
         self.sobel_x = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False)
         self.sobel_x.weight = nn.Parameter(kernel_x, requires_grad=False)
 
-        kernel_y = torch.FloatTensor([[1, 0, -1], [2, 0, -2], [1, 0, -1]])[None][None]
+        kernel_y = torch.FloatTensor([[1, 2, 1], [0, 0, 0], [-1, -2, -1]])[None][None]
         kernel_y = kernel_y.expand(in_channels, out_channels, -1, -1)
         self.sobel_y = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False)
         self.sobel_y.weight = nn.Parameter(kernel_y, requires_grad=False)
@@ -129,3 +131,9 @@ class EdgeAwareLoss(nn.Module):
         edge_map_clean = self.sobel(clean)
         edge_loss = self.criterion(edge_map_noisy, edge_map_clean)
         return self.criterion(noisy, clean) + self.weight * edge_loss
+
+
+x = torch.randn(10, 3, 12, 12)
+y = torch.randn(10, 3, 12, 12)
+loss = EdgeAwareLoss()
+print(loss(x, y))
