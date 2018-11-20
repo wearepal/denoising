@@ -35,7 +35,7 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
             optimizer.zero_grad()
 
             # Denoise the image and calculate the loss wrt target clean image
-            denoised = model(noisy, iso)
+            denoised = torch.clamp(model(noisy, iso), min=-1, max=1)
             loss = criterion(denoised, clean)
 
             # Calculate gradients and update weights
@@ -104,7 +104,7 @@ def validate(args, val_loader, model, criterion, training_iters, summary_writer)
                 iso = iso.cuda() if args.cuda else iso
 
                 # Denoise the image and calculate the loss wrt target clean image
-                denoised = model(noisy, iso)
+                denoised = torch.clamp(model(noisy, iso), min=-1, max=1)
                 loss = criterion(denoised, clean)
 
                 # Update meters
@@ -180,7 +180,7 @@ def evaluate_psnr_and_vgg_loss(args, model, data_loader):
                 iso = iso.cuda() if args.cuda else iso
 
                 # Denoise the image and calculate the loss wrt target clean image
-                denoised = model(noisy, iso)
+                denoised = torch.clamp(model(noisy, iso), min=-1, max=1)
                 psnr = psnr_calculator(denoised, clean).mean()
                 ssim = ssim_calculator(denoised, clean).mean()
                 vgg_loss = vgg_loss_calculator(denoised, clean)

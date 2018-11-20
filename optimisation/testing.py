@@ -34,7 +34,6 @@ def test(args, sample_transform):
     test_dataset = TestDataset(args.run_on_test[1], transform=sample_transform)
     test_loader = DataLoader(test_dataset, num_workers=args.workers, pin_memory=args.cuda)
 
-
     with torch.no_grad():
         for img_no, sample in enumerate(tqdm(test_loader)):
             noisy = sample['noisy']
