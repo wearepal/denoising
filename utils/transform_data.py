@@ -9,7 +9,7 @@ from loader import HuaweiDataset
 import argparse
 
 
-def main(args: argparse.Namespace) -> None: #patches, patch_size, random_crops=0, old_path=None, new_path=None):
+def main(args: argparse.Namespace) -> None:
     rand_crop = transforms.RandomCrop(size=args.size)
     transform = transforms.Compose([rand_crop])
 
@@ -55,7 +55,8 @@ def main(args: argparse.Namespace) -> None: #patches, patch_size, random_crops=0
         for i in range(args.random_patches):
             noisy = transform(sample['noisy'])
             noisy.save(noisy_path / f"{patch_no+i}.png")
-        dataset_info_writer(noisy_path, clean_path, sample['iso'], sample['class'], patch_no+args.random_patches)
+        dataset_info_writer(noisy_path, clean_path, sample['iso'], sample['class'],
+                            patch_no+args.random_patches)
     data.info_df.to_csv(str(transformed_path / "Training_Data.csv"), index=False)
 
 
