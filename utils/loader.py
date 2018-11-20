@@ -8,6 +8,9 @@ from torchvision import transforms
 import numpy as np
 
 
+CLASS_CODES = {'building': 0, 'foliage': 1, 'text': 2}
+
+
 class TransformedHuaweiDataset(Dataset):
     """Class for loading the transformed Huawei dataset"""
     def __init__(self, root_dir=None, transform=None):
@@ -174,8 +177,6 @@ class CsvLoader(Dataset):
         self.root_path = full_path.parent
         self.info_df = pd.read_csv(full_path)
 
-        self.class_values = {'building': 0, 'foliage': 1, 'text': 2}
-
     def __len__(self):
         return len(self.info_df)
 
@@ -190,7 +191,7 @@ class CsvLoader(Dataset):
             'clean': transforms.functional.to_tensor(clean_image),
             'noisy': transforms.functional.to_tensor(noisy_image),
             'iso': torch.tensor(self.info_df.iloc[idx]['iso'], dtype=torch.float32),
-            'class': torch.LongTensor(self.info_df.iloc[idx]['class'].replace(self.class_values))
+            'class': torch.LongTensor(self.info_df.iloc[idx]['class'].replace(CLASS_CODES))
         }
 
     def random_split(self, test_ratio=0.5, seed=None):
@@ -201,9 +202,6 @@ class CsvLoader(Dataset):
         test_idx = np.random.choice(np.arange(n_total), n_test_images, replace=False)
         train_idx = np.setdiff1d(np.arange(n_total), test_idx)
         return Subset(self, train_idx), Subset(self, test_idx)
-
-
-class_values = {'building': 0, 'foliage': 1, 'text': 2}
 
 
 def transform_sample(sample):
@@ -221,7 +219,7 @@ def transform_sample(sample):
         'clean': clean_transforms(sample['clean']) if 'clean' in sample else None,
         'noisy': noisy_transforms(sample['noisy']),
         'iso': torch.FloatTensor([(sample['iso'] - 1215.32) / 958.13]),   # (x - mean) / std,
-        'class': torch.LongTensor([class_values[sample['class']]])
+        'class': torch.LongTensor([CLASS_CODES[sample['class']]])
     }
 
     return {k: v for k, v in transformed_sample.items() if v is not None}
