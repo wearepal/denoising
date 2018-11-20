@@ -92,11 +92,13 @@ class HingeLossGAN(nn.Module):
 
 class SobelMagnitude(nn.Module):
 
-    def __init__(self, in_channels, out_channels=None):
+    def __init__(self, in_channels, out_channels=None, eps=1.e-5):
         super().__init__()
 
         self.in_channels = in_channels
         out_channels = in_channels if out_channels is None else out_channels
+        self.out_channels = out_channels
+        self.eps = eps
 
         kernel_x = torch.FloatTensor([[1, 0, -1], [2, 0, -2], [1, 0, -1]])[None][None]
         kernel_x = kernel_x.expand(in_channels, out_channels, -1, -1)
@@ -111,7 +113,7 @@ class SobelMagnitude(nn.Module):
     def forward(self, x):
         G_x = self.sobel_x(x)
         G_y = self.sobel_y(x)
-        G = (G_x ** 2 + G_y ** 2).sqrt()
+        G = ((G_x ** 2 + G_y ** 2) + self.eps).sqrt()
         return G
 
 
