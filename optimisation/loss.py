@@ -113,7 +113,7 @@ class SobelMagnitude(nn.Module):
     def forward(self, x):
         G_x = self.sobel_x(x)
         G_y = self.sobel_y(x)
-        G = ((G_x ** 2 + G_y ** 2) + self.eps).sqrt()
+        G = ((G_x ** 2 + G_y ** 2) + self.eps).sqrt()   # channel-wise magnitude
         return G
 
 
