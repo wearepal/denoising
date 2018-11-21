@@ -2,7 +2,7 @@ import math
 
 import torch
 import torch.nn as nn
-
+from torch.autograd import Function
 
 class Identity(nn.Module):
 
@@ -22,6 +22,25 @@ def norm(num_channels, num_norm_groups, num_classes=0):
         return nn.GroupNorm(num_channels=num_channels, num_groups=num_norm_groups)
     else:
         return nn.BatchNorm2d(num_features=num_channels)
+
+
+class GradReverse(Function):
+    @staticmethod
+    def forward(ctx, x):
+        return x.view_as(x)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        return grad_output.neg()
+
+
+class GradReverseLayer(nn.Module):
+
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        return GradReverse.apply(x)
 
 
 class ConvLayerParent(nn.Module):
