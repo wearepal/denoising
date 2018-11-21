@@ -9,6 +9,7 @@ import torch
 from torch.utils.data import DataLoader
 from tensorboardX import SummaryWriter
 from torchvision import transforms
+from torch.optim.lr_scheduler import StepLR
 
 from optimisation.testing import test
 from optimisation.training import train, validate, evaluate_psnr_and_vgg_loss
@@ -57,13 +58,14 @@ def parse_arguments(raw_args=None):
     parser.add_argument('-teb', '--test_batch_size', default=256, type=int,
                         metavar='N', help='mini-batch size for test data (default: 256)')
 
-    parser.add_argument('-lr', '--learning_rate', default=0.005, type=float,
+    parser.add_argument('-lr', '--learning_rate', default=0.001, type=float,
                         metavar='LR', help='initial learning rate (default: 0.005)')
 
     # model parameters
     parser.add_argument('--loss', type=str, default='MSELoss')
     parser.add_argument('--model', type=str, default='SimpleCNN')
     parser.add_argument('--optim', type=str, default='Adam')
+    parser.add_argument('--lr_step_size', type=int, default=30)
     parser.add_argument('--args_to_loss', action='store_true', default=False,
                         help='whether to pass the commandline arguments to the loss function')
 
@@ -112,7 +114,8 @@ def main(args):
         return
     
     # Create results path
-    if args.save_dir: # If specified
+
+    if args.save_dir:  # If specified
         save_path = Path(args.save_dir).resolve()
     else:
         save_path = Path().resolve().parent / "results" / args.model / str(round(time.time()))
@@ -136,6 +139,8 @@ def main(args):
     criterion = criterion_constructor(args) if args.args_to_loss else criterion_constructor()
     criterion = criterion.cuda() if args.cuda else criterion
 
+    scheduler = StepLR(optimizer, step_size=args.lr_step_size, gamma=0.1)
+
     dataset = TransformedHuaweiDataset(root_dir=args.data_dir, transform=transform_sample)
     train_dataset, val_dataset = dataset.random_split(test_ratio=args.test_split,
                                                       data_subset=args.data_subset)
@@ -155,7 +160,7 @@ def main(args):
         if checkpoint is not None:
             args.start_epoch = checkpoint['epoch'] + 1
             best_loss = checkpoint['best_loss']
-            model.load_state_dict(checkpoint['state_dict'])
+            model.load_state_dict(checkpoint['model'])
             optimizer.load_state_dict(checkpoint['optimizer'])
 
     if args.evaluate:
@@ -164,6 +169,7 @@ def main(args):
         return
 
     for epoch in range(args.start_epoch, args.epochs):
+
         training_iters = (epoch + 1) * len(train_loader)
 
         # Train
@@ -186,6 +192,8 @@ def main(args):
             'best_loss': best_loss
         }
         save_checkpoint(checkpoint, model_filename, is_best, save_path)
+        # anneal learning rate
+        scheduler.step(epoch=epoch)
 
     # Evaluate model using PSNR and SSIM metrics
     evaluate_psnr_and_vgg_loss(args, model, val_loader)
