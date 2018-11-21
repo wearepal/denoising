@@ -20,7 +20,7 @@ class DilatedGatedCNN(nn.Module):
             layers.append(GatedConvLayer(args.cnn_hidden_channels, args.cnn_hidden_channels,
                                          dilation=d, preserve_size=True, local_condition=args.iso))
 
-        layers.append(GatedConvLayer(args.cnn_hidden_channels, args.cnn_in_channels, local_condition=args.iso))
+        layers.append(GatedConvLayer(args.cnn_hidden_channels, args.cnn_hidden_channels, local_condition=args.iso))
         # Output layer
         layers.append(GatedConvLayer(args.cnn_hidden_channels, args.cnn_in_channels, local_condition=args.iso,
                                      normalize=False, layer_activation=None))
