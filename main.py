@@ -65,7 +65,7 @@ def parse_arguments(raw_args=None):
     parser.add_argument('--loss', type=str, default='MSELoss')
     parser.add_argument('--model', type=str, default='SimpleCNN')
     parser.add_argument('--optim', type=str, default='Adam')
-    parser.add_argument('--lr_step_size', type=int, default=10)
+    parser.add_argument('--lr_step_size', type=int, default=30)
     parser.add_argument('--args_to_loss', action='store_true', default=False,
                         help='whether to pass the commandline arguments to the loss function')
 
@@ -114,7 +114,8 @@ def main(args):
         return
     
     # Create results path
-    if args.save_dir: # If specified
+
+    if args.save_dir:  # If specified
         save_path = Path(args.save_dir).resolve()
     else:
         save_path = Path().resolve().parent / "results" / args.model / str(round(time.time()))
@@ -168,7 +169,6 @@ def main(args):
         return
 
     for epoch in range(args.start_epoch, args.epochs):
-        scheduler.step(epoch=epoch)
 
         training_iters = (epoch + 1) * len(train_loader)
 
@@ -192,6 +192,8 @@ def main(args):
             'best_loss': best_loss
         }
         save_checkpoint(checkpoint, model_filename, is_best, save_path)
+        # anneal learning rate
+        scheduler.step(epoch=epoch)
 
     # Evaluate model using PSNR and SSIM metrics
     evaluate_psnr_and_vgg_loss(args, model, val_loader)
