@@ -8,6 +8,8 @@ from tqdm import tqdm
 from loader import HuaweiDataset
 import argparse
 
+IMAGE_HEIGHT = 3968
+IMAGE_WIDTH = 2976
 
 def main(args: argparse.Namespace) -> None:
     rand_crop = transforms.RandomCrop(size=args.size)
@@ -39,7 +41,7 @@ def main(args: argparse.Namespace) -> None:
         patchsize = (args.size, args.size) if type(args.size) == int else tuple(args.size)
 
         patch_no = 0
-        for stride in calculate_strides((3968, 2976), patchsize, args.overlap):
+        for stride in calculate_strides((IMAGE_HEIGHT, IMAGE_WIDTH), patchsize, args.overlap):
             patchsize = (args.size, args.size) if type(args.size) == int else tuple(args.size)
             with F.crop(sample['clean'], *stride, *patchsize) as clean:
                 clean.save(clean_path / f"{patch_no}.png")
