@@ -22,9 +22,9 @@ class SimpleComplexGatedCNN(nn.Module):
             layers.append(ComplexGatedConvLayer(num_hidden_channels, num_hidden_channels,
                                                 local_condition=args.iso))
 
-        layers.append(GatedConvLayer(num_hidden_channels, args.cnn_in_channels,
-                                     layer_activation=None, normalize=False,
-                                     local_condition=args.iso))
+        layers.append(ComplexGatedConvLayer(num_hidden_channels, args.cnn_in_channels,
+                                            layer_activation=None, normalize=False,
+                                            local_condition=args.iso))
 
         self.model = nn.ModuleList(layers)
 
