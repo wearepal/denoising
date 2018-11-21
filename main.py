@@ -58,7 +58,7 @@ def parse_arguments(raw_args=None):
     parser.add_argument('-teb', '--test_batch_size', default=256, type=int,
                         metavar='N', help='mini-batch size for test data (default: 256)')
 
-    parser.add_argument('-lr', '--learning_rate', default=0.005, type=float,
+    parser.add_argument('-lr', '--learning_rate', default=0.001, type=float,
                         metavar='LR', help='initial learning rate (default: 0.005)')
 
     # model parameters
