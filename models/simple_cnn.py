@@ -41,23 +41,23 @@ class SimpleGatedCNN(nn.Module):
     Simple generator network with gated convolutions and a
     uniform number of filters throughout the hidden layers.
     """
-    def __init__(self, args):
+    def __init__(self):
         super().__init__()
 
         # Input layer
-        layers = [GatedConvLayer(args.cnn_in_channels, args.cnn_hidden_channels,
-                                 local_condition=args.iso, num_classes=args.num_classes)]
+        layers = [GatedConvLayer(3, 32,
+                                 local_condition=True, num_classes=0)]
         # Hidden layers
-        for _ in range(args.cnn_num_hidden_layers):
-            layers.append(GatedConvLayer(args.cnn_hidden_channels, args.cnn_hidden_channels,
-                                         num_classes=args.num_classes, local_condition=args.iso))
+        for _ in range(7):
+            layers.append(GatedConvLayer(32, 32,
+                                         num_classes=0, local_condition=True))
         # Output layer
-        layers.append(GatedConvLayer(args.cnn_hidden_channels, args.cnn_in_channels,
-                                     num_classes=args.num_classes, local_condition=args.iso,
+        layers.append(GatedConvLayer(32, 32,
+                                     num_classes=0, local_condition=True,
                                      normalize=False, layer_activation=None))
         self.model = nn.ModuleList(layers)
 
-        self.residual = not args.interpolate
+        self.residual = True
 
     def forward(self, x, c=None, class_labels=None):
         out = x
