@@ -150,14 +150,15 @@ def main(args):
 
     # generator
     generator = getattr(models, args.generator)(args)
-    generator = generator.cuda() if args.cuda else generator
     apply_spectral_norm(generator)  # apply spectral normalization to all generator layers
+    generator = generator.cuda() if args.cuda else generator
+
     # discriminator
     discriminator = getattr(models, args.discriminator)(args)
     discriminator = discriminator.cuda() if args.cuda else discriminator
 
     gen_optimizer = getattr(torch.optim, args.optim)(generator.parameters(), lr=args.gen_learning_rate)
-    disc_optimizer = getattr(torch.optim, args.optim)(generator.parameters(), lr=args.disc_learning_rate)
+    disc_optimizer = getattr(torch.optim, args.optim)(discriminator.parameters(), lr=args.disc_learning_rate)
 
     criterion_constructor = getattr(loss, args.content_loss)
     content_criterion = criterion_constructor(args) if args.args_to_loss else criterion_constructor()
