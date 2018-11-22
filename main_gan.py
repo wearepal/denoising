@@ -152,7 +152,7 @@ def main(args):
 
     # generator
     generator = getattr(models, args.generator)(args)
-    # apply_spectral_norm(generator)  # apply spectral normalization to all generator layers
+    apply_spectral_norm(generator)  # apply spectral normalization to all generator layers
     generator = generator.cuda() if args.cuda else generator
 
     # discriminator
