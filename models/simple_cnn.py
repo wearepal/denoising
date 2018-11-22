@@ -36,7 +36,7 @@ class SimpleCNN(nn.Module):
         return out
 
 
-class GatedCNN(nn.Module):
+class SimpleGatedCNN(nn.Module):
     """
     Simple generator network with gated convolutions and a
     uniform number of filters throughout the hidden layers.
