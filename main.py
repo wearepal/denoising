@@ -35,8 +35,8 @@ def parse_arguments(raw_args=None):
     parser.add_argument('-nc', '--no_cuda', action='store_true', default=False,
                         help='disables CUDA training')
 
-    parser.add_argument('--manual_seed', type=int,
-                        help='manual seed, if not given resorts to random seed.')
+    parser.add_argument('--random_seed', action="store_true",
+                        help='use random seed rather than 42.')
 
     parser.add_argument('-sd', '--save_dir', type=str, metavar='PATH', default='',
                         help='path to save results and checkpoints to '
@@ -94,17 +94,19 @@ def parse_arguments(raw_args=None):
     args.iso = not args.no_iso
     args.num_classes = 3 if args.use_class else 0
 
-    if args.manual_seed is None:
-        args.manual_seed = random.randint(1, 100000)
+    if args.random_seed:
+        args.seed = random.randint(1, 100000)
+    else:
+        args.seed = 42
 
     return args
 
 
 def main(args):
-    random.seed(args.manual_seed)
-    np.random.seed(args.manual_seed)
-    torch.manual_seed(args.manual_seed)
-    torch.cuda.manual_seed_all(args.manual_seed)    
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    torch.cuda.manual_seed_all(args.seed)    
     if args.cuda:
         # gpu device number
         torch.cuda.set_device(args.gpu_num)
@@ -124,7 +126,7 @@ def main(args):
     kwargs = {'pin_memory': True} if args.cuda else {}
 
     print('\nMODEL SETTINGS: \n', args, '\n')
-    print("Random Seed: ", args.manual_seed)
+    print("Random Seed: ", args.seed)
 
     # Save config
     torch.save(args, save_path / 'denoising.config')
