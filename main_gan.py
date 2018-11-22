@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 from tensorboardX import SummaryWriter
 
 from optimisation.testing import test
-from optimisation.training import train_gan, validate, evaluate_psnr_and_vgg_loss
+from optimisation.training import train, train_gan, validate, evaluate_psnr_and_vgg_loss
 from optimisation import loss
 from utils import TransformedHuaweiDataset, transform_sample
 from utils.functions import apply_spectral_norm
@@ -195,6 +195,10 @@ def main(args):
         # Evaluate model using PSNR and SSIM metrics
         evaluate_psnr_and_vgg_loss(args, generator, val_loader)
         return
+
+    # pretrain generator
+    for epoch in range(2):
+        train(args, train_loader, generator, content_criterion, gen_optimizer, epoch, writer)
 
     for epoch in range(args.start_epoch, args.epochs):
         training_iters = (epoch + 1) * len(train_loader)
