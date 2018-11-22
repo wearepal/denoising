@@ -38,7 +38,6 @@ class GatedDiscriminator(nn.Module):
 
         for layer in self.model:
             out = layer(out, c, class_labels)
-            print(out.shape)
 
         out = self.fc(out.view(x.size(0), -1))
 
