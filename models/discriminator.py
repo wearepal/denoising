@@ -82,7 +82,7 @@ class ResNetDiscriminator(nn.Module):
         self.hidden_channels = args.disc_hidden_channels
 
         self.model = nn.Sequential(
-                FirstResBlockDiscriminator(args.in_channels, args.disc_hidden_channels, stride=2),
+                FirstResBlockDiscriminator(args.cnn_in_channels, args.disc_hidden_channels, stride=2),
                 ResBlockDiscriminator(args.disc_hidden_channels, args.disc_hidden_channels, stride=2),
                 ResBlockDiscriminator(args.disc_hidden_channels, args.disc_hidden_channels),
                 ResBlockDiscriminator(args.disc_hidden_channels, args.disc_hidden_channels),
