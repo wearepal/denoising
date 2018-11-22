@@ -198,7 +198,7 @@ def main(args):
         evaluate_psnr_and_vgg_loss(args, generator, val_loader)
         return
 
-    # pretrain generator
+    # pre-train generator
     for epoch in range(2):
         train(args, train_loader, generator, content_criterion, gen_optimizer, epoch, None)
 
