@@ -200,6 +200,7 @@ def main(args):
 
     # pre-train generator
     for epoch in range(2):
+        print("===> Pre-training generator")
         train(args, train_loader, generator, content_criterion, gen_optimizer, epoch, None)
 
     for epoch in range(args.start_epoch, args.epochs):
