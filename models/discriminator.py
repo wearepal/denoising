@@ -20,7 +20,7 @@ class GatedDiscriminator(nn.Module):
 
         # layer_params = [(32, 4, 2), (64, 3, 1), (64, 4, 2), (128, 3, 1),
         #                 (128, 4, 2), (256, 3, 1), (256, 4, 2), (512, 3, 1)]
-        layer_params = [(64, 3, 2), (128, 3, 2), (256, 3, 1), (512, 3, 2)]
+        layer_params = [(64, 3, 2), (128, 3, 2), (256, 3, 2), (512, 3, 1)]
 
         for out_channels, kernel_size, stride in layer_params:
             conv = GatedConvLayer(in_channels, out_channels, kernel_size=kernel_size, stride=stride,
