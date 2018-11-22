@@ -164,7 +164,7 @@ def main(args):
     content_criterion = criterion_constructor(args) if args.args_to_loss else criterion_constructor()
     content_criterion = content_criterion.cuda() if args.cuda else content_criterion
 
-    adv_criterion = getattr(loss, args.content_loss)()
+    adv_criterion = getattr(loss, args.adv_loss)()
     adv_criterion = adv_criterion.cuda() if args.cuda else adv_criterion
 
     dataset = TransformedHuaweiDataset(root_dir=args.data_dir, transform=transform_sample)
