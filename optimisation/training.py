@@ -71,6 +71,89 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
     return average_loss
 
 
+def train_gan(args, train_loader, generator, discriminator, content_criterion,
+              disc_criterion, gen_optimizer, disc_optimizer, epoch, summary_writer):
+    # Meters to log batch time and loss
+    batch_time_meter = AverageValueMeter()
+    loss_meter = AverageValueMeter()
+
+    # Switch to train mode
+    generator.train()
+    discriminator.train()
+
+    end = time.time()
+    steps = len(train_loader)
+    # Start progress bar. Maximum value = number of batches.
+    with tqdm(total=steps) as pbar:
+        # Iterate through the training batch samples
+        for i, sample in enumerate(train_loader):
+            noisy = sample['noisy']
+            clean = sample['clean']
+            iso = sample['iso']
+            class_labels = sample['class'].squeeze(-1)
+
+            # Send inputs to correct device
+            noisy = noisy.cuda() if args.cuda else noisy
+            clean = clean.cuda() if args.cuda else clean
+            iso = iso.cuda() if args.cuda else iso
+            class_labels = class_labels.cuda() if args.cuda else class_labels
+
+            # =========================
+            # Train the discriminator
+            # =========================
+            for _ in range(args.disc_iters):
+                # Clear past gradients
+                disc_optimizer.zero_grad()
+                gen_optimizer.zero_grad()
+
+                denoised = generator(noisy, iso, class_labels)
+                disc_loss = disc_criterion(denoised, clean, discriminator)
+
+                disc_loss.backward()
+                disc_optimizer.step()
+
+            # ====================
+            # Train the generator
+            # ====================
+            # Clear past gradients
+            disc_optimizer.zero_grad()
+            gen_optimizer.zero_grad()
+            # Denoise the image and calculate the loss wrt target clean image
+            denoised = generator(noisy, iso, class_labels)
+            generator_content_loss = content_criterion(denoised, clean)
+            generator_adversarial_loss = -discriminator(denoised).mean()  # applies only to wasserstein and hinge loss
+            generator_total_loss = generator_content_loss + 1e-3 * generator_adversarial_loss
+
+            # Calculate gradients and update weights
+            generator_total_loss.backward()
+            gen_optimizer.step()
+
+            # Update meters
+            loss_meter.add(generator_total_loss.item())
+            batch_time_meter.add(time.time() - end)
+            end = time.time()
+
+            # Write image samples to tensorboard
+            if i == 0:
+                # TODO: set num_samples_to_log to equal batch size if exceeding it
+                if args.train_batch_size >= args.num_samples_to_log:
+                    log_images(noisy, denoised, clean, summary_writer,
+                               args.num_samples_to_log, (epoch * steps) + i, 'Train')
+
+            # Update progress bar
+            pbar.set_postfix(loss=loss_meter.mean)
+            pbar.update()
+
+            # Write the results to tensorboard
+            summary_writer.add_scalar('Train/Loss', generator_total_loss, (epoch * steps) + i)
+
+    average_loss = loss_meter.mean
+    print("===> Average total loss: {:4f}".format(average_loss))
+    print("===> Average batch time: {:.4f}".format(batch_time_meter.mean))
+
+    return average_loss
+
+
 def validate(args, val_loader, model, criterion, training_iters, summary_writer):
     """
     Args:
