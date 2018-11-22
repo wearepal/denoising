@@ -45,15 +45,15 @@ class SimpleGatedCNN(nn.Module):
         super().__init__()
 
         # Input layer
-        layers = [GatedConvLayer(args.cnn_in_channels, args.cnn_hidden_channels,
-                                 normalize=False, local_condition=args.iso, num_classes=args.num_classes)]
+        layers = [GatedConvLayer(args.cnn_in_channels, args.cnn_hidden_channels, dilation=1,
+                                 preserve_size=True, local_condition=args.iso, num_classes=args.num_classes)]
         # Hidden layers
         for _ in range(args.cnn_num_hidden_layers):
-            layers.append(GatedConvLayer(args.cnn_hidden_channels, args.cnn_hidden_channels,
-                                         num_classes=args.num_classes, local_condition=args.iso))
+            layers.append(GatedConvLayer(args.cnn_hidden_channels, args.cnn_hidden_channels, dilation=2,
+                                         preserve_size=True, num_classes=args.num_classes, local_condition=args.iso))
         # Output layer
-        layers.append(GatedConvLayer(args.cnn_hidden_channels, args.cnn_in_channels,
-                                     num_classes=args.num_classes, local_condition=args.iso,
+        layers.append(GatedConvLayer(args.cnn_hidden_channels, args.cnn_in_channels, dilation=1,
+                                     preserve_size=True, num_classes=args.num_classes, local_condition=args.iso,
                                      normalize=False, layer_activation=None))
         self.model = nn.ModuleList(layers)
 
