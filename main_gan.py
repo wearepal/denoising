@@ -13,6 +13,7 @@ from optimisation.testing import test
 from optimisation.training import train_gan, validate, evaluate_psnr_and_vgg_loss
 from optimisation import loss
 from utils import TransformedHuaweiDataset, transform_sample
+from utils.functions import apply_spectral_norm
 import models
 
 
@@ -150,6 +151,7 @@ def main(args):
     # generator
     generator = getattr(models, args.generator)(args)
     generator = generator.cuda() if args.cuda else generator
+    apply_spectral_norm(generator)  # apply spectral normalization to all generator layers
     # discriminator
     discriminator = getattr(models, args.discriminator)(args)
     discriminator = discriminator.cuda() if args.cuda else discriminator
