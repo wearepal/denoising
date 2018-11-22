@@ -51,7 +51,7 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
             end = time.time()
 
             # Write image samples to tensorboard
-            if i == 0:
+            if i == 0 and summary_writer is not None:
                 # TODO: set num_samples_to_log to equal batch size if exceeding it
                 if args.train_batch_size >= args.num_samples_to_log:
                     log_images(noisy, denoised, clean, summary_writer,
