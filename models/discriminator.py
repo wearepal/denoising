@@ -5,7 +5,7 @@ from torch.nn.utils import spectral_norm
 
 
 # special ResBlock just for the first layer of the discriminator
-class FirstResBlockDiscriminator(nn.Module):
+class _FirstResBlockDiscriminator(nn.Module):
 
     def __init__(self, in_channels, out_channels, stride=1):
         super().__init__()
@@ -33,7 +33,7 @@ class FirstResBlockDiscriminator(nn.Module):
         return self.model(x) + self.bypass(x)
 
 
-class ResBlockDiscriminator(nn.Module):
+class _ResBlockDiscriminator(nn.Module):
 
     def __init__(self, in_channels, out_channels, stride=1):
         super().__init__()
@@ -82,10 +82,10 @@ class ResNetDiscriminator(nn.Module):
         self.hidden_channels = args.disc_hidden_channels
 
         self.model = nn.Sequential(
-                FirstResBlockDiscriminator(args.cnn_in_channels, args.disc_hidden_channels, stride=2),
-                ResBlockDiscriminator(args.disc_hidden_channels, args.disc_hidden_channels, stride=2),
-                ResBlockDiscriminator(args.disc_hidden_channels, args.disc_hidden_channels),
-                ResBlockDiscriminator(args.disc_hidden_channels, args.disc_hidden_channels),
+                _FirstResBlockDiscriminator(args.cnn_in_channels, args.disc_hidden_channels, stride=2),
+                _ResBlockDiscriminator(args.disc_hidden_channels, args.disc_hidden_channels, stride=2),
+                _ResBlockDiscriminator(args.disc_hidden_channels, args.disc_hidden_channels),
+                _ResBlockDiscriminator(args.disc_hidden_channels, args.disc_hidden_channels),
                 nn.ReLU(),
                 nn.AvgPool2d(8),
             )
