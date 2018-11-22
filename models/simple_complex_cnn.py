@@ -13,19 +13,22 @@ class SimpleComplexGatedCNN(nn.Module):
     def __init__(self, args):
         super().__init__()
 
+        num_hidden_channels = args.cnn_hidden_channels // 2
         # Input layer
-        layers = [ComplexGatedConvLayer(args.cnn_in_channels, args.cnn_hidden_channels,
+        layers = [ComplexGatedConvLayer(args.cnn_in_channels, num_hidden_channels,
                                         local_condition=args.iso)]
         # Hidden layers
         for _ in range(args.cnn_num_hidden_layers):
             layers.append(ComplexGatedConvLayer(args.cnn_hidden_channels, args.cnn_hidden_channels,
                                                 local_condition=args.iso, num_classes=args.num_classes))
 
-        self.real_conv1 = GatedConvLayer(args.cnn_hidden_channels, args.cnn_hidden_channels * 2,
-                                         local_condition=args.iso, num_classes=args.num_classes)
-        self.real_conv2 = GatedConvLayer(args.cnn_hidden_channels * 2, args.cnn_in_channels,
-                                         normalize=False, layer_activation=None,
-                                         local_condition=args.iso, num_classes=args.num_classes)
+            layers.append(ComplexGatedConvLayer(num_hidden_channels, num_hidden_channels,
+                                                local_condition=args.iso))
+
+        layers.append(ComplexGatedConvLayer(num_hidden_channels, args.cnn_in_channels,
+                                            layer_activation=None, normalize=False,
+                                            local_condition=args.iso))
+
         self.model = nn.ModuleList(layers)
 
         self.residual = not args.interpolate
@@ -36,13 +39,10 @@ class SimpleComplexGatedCNN(nn.Module):
         for layer in self.model:
             out = layer(out, c)
 
+        # inverse fourier transform
         out = torch.irfft(out, signal_ndim=2, signal_sizes=x.shape[2:])
-
-        out = self.real_conv1(out, c)
-        out = self.real_conv2(out, c)
 
         if self.residual:   # learn noise residual
             out = out + x
-        # inverse fourier transform
 
         return out
