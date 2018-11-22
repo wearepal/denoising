@@ -78,7 +78,7 @@ class ResNetDiscriminator(nn.Module):
     def __init__(self, args):
         super().__init__()
 
-        self.in_channels = args.in_channels
+        self.in_channels = args.cnn_in_channels
         self.hidden_channels = args.disc_hidden_channels
 
         self.model = nn.Sequential(
