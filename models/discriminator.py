@@ -1,97 +1,48 @@
 import numpy as np
 
 import torch.nn as nn
-from torch.nn.utils import spectral_norm
+
+from models.layers import GatedConvLayer
+
+import argparse
+
+PATCH_SIZE = 64
 
 
-# special ResBlock just for the first layer of the discriminator
-class _FirstResBlockDiscriminator(nn.Module):
-
-    def __init__(self, in_channels, out_channels, stride=1):
-        super().__init__()
-
-        self.conv1 = nn.Conv2d(in_channels, out_channels, 3, 1, padding=1)
-        self.conv2 = nn.Conv2d(out_channels, out_channels, 3, 1, padding=1)
-        self.bypass_conv = nn.Conv2d(in_channels, out_channels, 1, 1, padding=0)
-        nn.init.xavier_uniform_(self.conv1.weight.data, 1.)
-        nn.init.xavier_uniform_(self.conv2.weight.data, 1.)
-        nn.init.xavier_uniform_(self.bypass_conv.weight.data, np.sqrt(2))
-
-        # we don't want to apply ReLU activation to raw image before convolution transformation.
-        self.model = nn.Sequential(
-            spectral_norm(self.conv1),
-            nn.ReLU(),
-            spectral_norm(self.conv2),
-            nn.AvgPool2d(2)
-            )
-        self.bypass = nn.Sequential(
-            nn.AvgPool2d(2),
-            spectral_norm(self.bypass_conv),
-        )
-
-    def forward(self, x):
-        return self.model(x) + self.bypass(x)
-
-
-class _ResBlockDiscriminator(nn.Module):
-
-    def __init__(self, in_channels, out_channels, stride=1):
-        super().__init__()
-
-        self.conv1 = nn.Conv2d(in_channels, out_channels, 3, 1, padding=1)
-        self.conv2 = nn.Conv2d(out_channels, out_channels, 3, 1, padding=1)
-        nn.init.xavier_uniform_(self.conv1.weight.data, 1.)
-        nn.init.xavier_uniform_(self.conv2.weight.data, 1.)
-
-        if stride == 1:
-            self.model = nn.Sequential(
-                nn.ReLU(),
-                spectral_norm(self.conv1),
-                nn.ReLU(),
-                spectral_norm(self.conv2)
-                )
-        else:
-            self.model = nn.Sequential(
-                nn.ReLU(),
-                spectral_norm(self.conv1),
-                nn.ReLU(),
-                spectral_norm(self.conv2),
-                nn.AvgPool2d(2, stride=stride, padding=0)
-                )
-        self.bypass = nn.Sequential()
-        if stride != 1:
-
-            self.bypass_conv = nn.Conv2d(in_channels,out_channels, 1, 1, padding=0)
-            nn.init.xavier_uniform_(self.bypass_conv.weight.data, np.sqrt(2))
-
-            self.bypass = nn.Sequential(
-                spectral_norm(self.bypass_conv),
-                nn.AvgPool2d(2, stride=stride, padding=0)
-            )
-
-    def forward(self, x):
-        return self.model(x) + self.bypass(x)
-
-
-class ResNetDiscriminator(nn.Module):
+class GatedDiscriminator(nn.Module):
 
     def __init__(self, args):
         super().__init__()
 
-        self.in_channels = args.cnn_in_channels
-        self.hidden_channels = args.disc_hidden_channels
+        layers = [GatedConvLayer(args.cnn_in_channels, 32, stride=2, normalize=False,
+                                 layer_activation=nn.LeakyReLU(0.1), local_condition=args.iso,
+                                 num_classes=args.num_classes)]
 
-        self.model = nn.Sequential(
-                _FirstResBlockDiscriminator(args.cnn_in_channels, args.disc_hidden_channels, stride=2),
-                _ResBlockDiscriminator(args.disc_hidden_channels, args.disc_hidden_channels, stride=2),
-                _ResBlockDiscriminator(args.disc_hidden_channels, args.disc_hidden_channels),
-                _ResBlockDiscriminator(args.disc_hidden_channels, args.disc_hidden_channels),
-                nn.ReLU(),
-                nn.AvgPool2d(8),
-            )
-        self.fc = nn.Linear(args.disc_hidden_channels, 1)
-        nn.init.xavier_uniform_(self.fc.weight.data, 1.)
-        self.fc = spectral_norm(self.fc)
+        in_channels = 32
+        in_dim = PATCH_SIZE / layers[0].stride      # patch size is 64
 
-    def forward(self, x):
-        return self.fc(self.model(x).view(-1, self.hidden_channels))
+        # layer_params = [(32, 4, 2), (64, 3, 1), (64, 4, 2), (128, 3, 1),
+        #                 (128, 4, 2), (256, 3, 1), (256, 4, 2), (512, 3, 1)]
+        layer_params = [(64, 3, 2), (128, 3, 2), (256, 3, 1), (512, 3, 2)]
+
+        for out_channels, kernel_size, stride in layer_params:
+            conv = GatedConvLayer(in_channels, out_channels, kernel_size=kernel_size, stride=stride,
+                                  normalize=False, layer_activation=nn.LeakyReLU(0.1),
+                                  local_condition=args.iso, num_classes=args.num_classes)
+            layers.append(conv)
+            in_channels = out_channels
+            in_dim /= stride
+
+        self.model = nn.ModuleList(layers)
+        self.fc = nn.Linear(in_dim * in_dim * in_channels, 1)
+
+    def forward(self, x, c=None, class_labels=None):
+        out = x
+
+        for layer in self.model:
+            out = layer(out, c, class_labels)
+            print(out.shape)
+
+        out = self.fc(out.view(x.size(0), -1))
+
+        return out

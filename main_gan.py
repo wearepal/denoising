@@ -76,7 +76,7 @@ def parse_arguments(raw_args=None):
     # model parameters
     parser.add_argument('-gen', '--generator', type=str, default='SimpleGatedCNN',
                         help='model to use as the generator')
-    parser.add_argument('-disc', '--discriminator', type=str, default='ResNetDiscriminator',
+    parser.add_argument('-disc', '--discriminator', type=str, default='GatedDiscriminator',
                         help='model to use as the discriminator')
     parser.add_argument('--args_to_loss', action='store_true', default=False,
                         help='whether to pass the commandline arguments to the loss function')
@@ -157,6 +157,7 @@ def main(args):
 
     # discriminator
     discriminator = getattr(models, args.discriminator)(args)
+    apply_spectral_norm(generator)  # apply spectral normalization to all discriminator layers
     discriminator = discriminator.cuda() if args.cuda else discriminator
 
     gen_optimizer = getattr(torch.optim, args.optim)(generator.parameters(), lr=args.gen_learning_rate)
@@ -199,7 +200,7 @@ def main(args):
         return
 
     # pre-train generator
-    for epoch in range(2):
+    for epoch in range(args.pretrain_epochs):
         print("===> Pre-training generator")
         train(args, train_loader, generator, content_criterion, gen_optimizer, epoch, None)
 

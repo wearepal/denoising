@@ -58,6 +58,8 @@ def parse_arguments(raw_args=None):
 
     parser.add_argument('-lr', '--learning_rate', default=0.005, type=float,
                         metavar='LR', help='initial learning rate (default: 0.005)')
+    parser.add_argument('--adv_weight', default=1e-3, type=float,
+                        metavar='W', help='weight on adversarial loss (default: 1e-3)')
 
     # model parameters
     parser.add_argument('--loss', type=str, default='MSELoss')
@@ -106,7 +108,7 @@ def main(args):
     random.seed(args.seed)
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
-    torch.cuda.manual_seed_all(args.seed)    
+    torch.cuda.manual_seed_all(args.seed)
     if args.cuda:
         # gpu device number
         torch.cuda.set_device(args.gpu_num)
@@ -114,7 +116,7 @@ def main(args):
     if args.run_on_test:
         test(args, transform_sample)
         return
-    
+
     # Create results path
     if args.save_dir: # If specified
         save_path = Path(args.save_dir).resolve()

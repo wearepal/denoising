@@ -52,7 +52,6 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
 
             # Write image samples to tensorboard
             if i == 0 and summary_writer is not None:
-                # TODO: set num_samples_to_log to equal batch size if exceeding it
                 if args.train_batch_size >= args.num_samples_to_log:
                     log_images(noisy, denoised, clean, summary_writer,
                                args.num_samples_to_log, (epoch * steps) + i, 'Train')
@@ -76,7 +75,9 @@ def train_gan(args, train_loader, generator, discriminator, content_criterion,
               adv_criterion, gen_optimizer, disc_optimizer, epoch, summary_writer):
     # Meters to log batch time and loss
     batch_time_meter = AverageValueMeter()
-    loss_meter = AverageValueMeter()
+    total_loss_meter = AverageValueMeter()
+    content_loss_meter = AverageValueMeter()
+    adv_loss_meter = AverageValueMeter()
 
     # Switch to train mode
     generator.train()
@@ -123,32 +124,38 @@ def train_gan(args, train_loader, generator, discriminator, content_criterion,
             denoised = generator(noisy, iso, class_labels)
             generator_content_loss = content_criterion(denoised, clean)
             generator_adversarial_loss = -discriminator(denoised).mean()  # applies only to wasserstein and hinge loss
-            generator_total_loss = generator_content_loss + 1e-3 * generator_adversarial_loss
+            generator_total_loss = generator_content_loss + args.adv_weight * generator_adversarial_loss
 
             # Calculate gradients and update weights
             generator_total_loss.backward()
             gen_optimizer.step()
 
             # Update meters
-            loss_meter.add(generator_total_loss.item())
+            total_loss_meter.add(generator_total_loss.item())
+            content_loss_meter.add(generator_content_loss.item())
+            adv_loss_meter.add(generator_adversarial_loss.item())
             batch_time_meter.add(time.time() - end)
             end = time.time()
 
             # Write image samples to tensorboard
             if i == 0:
-                # TODO: set num_samples_to_log to equal batch size if exceeding it
                 if args.train_batch_size >= args.num_samples_to_log:
                     log_images(noisy, denoised, clean, summary_writer,
                                args.num_samples_to_log, (epoch * steps) + i, 'Train')
 
             # Update progress bar
-            pbar.set_postfix(loss=loss_meter.mean)
+            pbar.set_postfix(total_loss=total_loss_meter.mean,
+                             content_loss=content_loss_meter.mean,
+                             adv_loss=adv_loss_meter.mean)
             pbar.update()
 
             # Write the results to tensorboard
-            summary_writer.add_scalar('Train/Loss', generator_total_loss, (epoch * steps) + i)
+            training_iters = (epoch * steps) + i
+            summary_writer.add_scalar('Train/Content_loss', generator_content_loss, training_iters)
+            summary_writer.add_scalar('Train/Adversarial_loss', generator_adversarial_loss, training_iters)
+            summary_writer.add_scalar('Train/Total_generator_loss', generator_total_loss, training_iters)
 
-    average_loss = loss_meter.mean
+    average_loss = total_loss_meter.mean
     print("===> Average total loss: {:4f}".format(average_loss))
     print("===> Average batch time: {:.4f}".format(batch_time_meter.mean))
 
