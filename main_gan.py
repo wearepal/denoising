@@ -74,7 +74,7 @@ def parse_arguments(raw_args=None):
     parser.add_argument('--adv_loss', type=str, default='HingeLossGAN', help='adversarial loss')
 
     # model parameters
-    parser.add_argument('-gen', '--generator', type=str, default='SimpleGatedCNN',
+    parser.add_argument('-gen', '--generator', type=str, default='SimpleCNN',
                         help='model to use as the generator')
     parser.add_argument('-disc', '--discriminator', type=str, default='ResNetDiscriminator',
                         help='model to use as the discriminator')
