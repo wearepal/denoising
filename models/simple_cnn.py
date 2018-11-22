@@ -52,8 +52,9 @@ class SimpleGatedCNN(nn.Module):
             layers.append(GatedConvLayer(args.cnn_hidden_channels, args.cnn_hidden_channels,
                                          num_classes=args.num_classes, local_condition=args.iso))
         # Output layer
-        layers.append(ConvLayer(args.cnn_hidden_channels, args.cnn_in_channels,
-                                num_classes=args.num_classes, normalize=False, layer_activation=None))
+        layers.append(GatedConvLayer(args.cnn_hidden_channels, args.cnn_in_channels,
+                                     num_classes=args.num_classes, local_condition=args.iso,
+                                     normalize=False, layer_activation=None))
         self.model = nn.ModuleList(layers)
 
         self.residual = not args.interpolate
