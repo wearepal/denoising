@@ -1,10 +1,7 @@
-import numpy as np
-
 import torch.nn as nn
 
 from models.layers import GatedConvLayer
 
-import argparse
 
 PATCH_SIZE = 64
 
