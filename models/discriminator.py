@@ -73,7 +73,7 @@ class ResBlockDiscriminator(nn.Module):
         return self.model(x) + self.bypass(x)
 
 
-class Discriminator(nn.Module):
+class ResNetDiscriminator(nn.Module):
 
     def __init__(self, args):
         super().__init__()

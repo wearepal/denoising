@@ -72,7 +72,7 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
 
 
 def train_gan(args, train_loader, generator, discriminator, content_criterion,
-              disc_criterion, gen_optimizer, disc_optimizer, epoch, summary_writer):
+              adv_criterion, gen_optimizer, disc_optimizer, epoch, summary_writer):
     # Meters to log batch time and loss
     batch_time_meter = AverageValueMeter()
     loss_meter = AverageValueMeter()
@@ -107,7 +107,7 @@ def train_gan(args, train_loader, generator, discriminator, content_criterion,
                 gen_optimizer.zero_grad()
 
                 denoised = generator(noisy, iso, class_labels)
-                disc_loss = disc_criterion(denoised, clean, discriminator)
+                disc_loss = adv_criterion(denoised, clean, discriminator)
 
                 disc_loss.backward()
                 disc_optimizer.step()
