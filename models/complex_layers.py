@@ -250,7 +250,7 @@ class ComplexBatchNorm2d(nn.Module):
 
     @staticmethod
     def _channelwise_mean(tensor):
-        return tensor.mean(-1, keepdim=True).mean(-2, keepdim=True).mean(0, keepdim=True)
+        return tensor.mean(0, keepdim=True).mean(2, keepdim=True).mean(3, keepdim=True)
 
     def complex_batch_norm(self, x, training=False, momentum=0.9):
         x_real, x_im = torch.unbind(x, dim=-1)
