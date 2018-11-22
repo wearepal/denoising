@@ -13,13 +13,15 @@ class SimpleCNN(nn.Module):
         super().__init__()
 
         # Input layer
-        layers = [ConvLayer(args.cnn_in_channels, args.cnn_hidden_channels)]
+        layers = [ConvLayer(args.cnn_in_channels, args.cnn_hidden_channels, num_classes=args.num_classes)]
         # Hidden layers
         for _ in range(args.cnn_num_hidden_layers):
-            layers.append(ConvLayer(args.cnn_hidden_channels, args.cnn_hidden_channels))
+            layers.append(ConvLayer(args.cnn_hidden_channels, args.cnn_hidden_channels,
+                                    num_classes=args.num_classes))
         # Output layer
         layers.append(ConvLayer(args.cnn_hidden_channels, args.cnn_in_channels,
-                                normalize=False, layer_activation=None))
+                                num_classes=args.num_classes, normalize=False,
+                                layer_activation=None))
         # Output layer
 
         self.model = nn.Sequential(*layers)
@@ -43,12 +45,15 @@ class SimpleGatedCNN(nn.Module):
         super().__init__()
 
         # Input layer
-        layers = [GatedConvLayer(args.cnn_in_channels, args.cnn_hidden_channels, local_condition=args.iso)]
+        layers = [GatedConvLayer(args.cnn_in_channels, args.cnn_hidden_channels,
+                                 local_condition=args.iso, num_classes=args.num_classes)]
         # Hidden layers
         for _ in range(args.cnn_num_hidden_layers):
-            layers.append(GatedConvLayer(args.cnn_hidden_channels, args.cnn_hidden_channels, local_condition=args.iso))
+            layers.append(GatedConvLayer(args.cnn_hidden_channels, args.cnn_hidden_channels,
+                                         num_classes=args.num_classes, local_condition=args.iso))
         # Output layer
-        layers.append(GatedConvLayer(args.cnn_hidden_channels, args.cnn_in_channels, local_condition=args.iso,
+        layers.append(GatedConvLayer(args.cnn_hidden_channels, args.cnn_in_channels,
+                                     num_classes=args.num_classes, local_condition=args.iso,
                                      normalize=False, layer_activation=None))
         self.model = nn.ModuleList(layers)
 

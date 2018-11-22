@@ -19,6 +19,9 @@ class SimpleComplexGatedCNN(nn.Module):
                                         local_condition=args.iso)]
         # Hidden layers
         for _ in range(args.cnn_num_hidden_layers):
+            layers.append(ComplexGatedConvLayer(args.cnn_hidden_channels, args.cnn_hidden_channels,
+                                                local_condition=args.iso, num_classes=args.num_classes))
+
             layers.append(ComplexGatedConvLayer(num_hidden_channels, num_hidden_channels,
                                                 local_condition=args.iso))
 

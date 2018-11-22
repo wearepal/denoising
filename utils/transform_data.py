@@ -5,7 +5,7 @@ from random import seed
 from torchvision import transforms
 F = transforms.functional
 from tqdm import tqdm
-from loader import HuaweiDataset
+from utils.loader import HuaweiDataset
 import argparse
 
 IMAGE_HEIGHT = 3968
@@ -32,6 +32,7 @@ def main(args: argparse.Namespace) -> None:
     transformed_path.mkdir()
     data = HuaweiDataset(root_dir=root_path)
     dataset_info_writer = _get_dataset_info_writer(transformed_path)
+
     for image_no, sample in enumerate(tqdm(data)):
         clean_path = transformed_path / str(image_no) / "clean"
         clean_path.mkdir(parents=True)
@@ -50,6 +51,7 @@ def main(args: argparse.Namespace) -> None:
             patch_no += 1
 
         seed(image_no)
+
         for i in range(args.random_patches):
             clean = transform(sample['clean'])
             clean.save(clean_path / f"{patch_no+i}.png")
@@ -59,6 +61,7 @@ def main(args: argparse.Namespace) -> None:
             noisy.save(noisy_path / f"{patch_no+i}.png")
         dataset_info_writer(noisy_path, clean_path, sample['iso'], sample['class'],
                             patch_no+args.random_patches)
+
     data.info_df.to_csv(str(transformed_path / "Training_Data.csv"), index=False)
 
 

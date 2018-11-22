@@ -7,6 +7,10 @@ from torch.utils.data import Dataset, Subset
 from torchvision import transforms
 import numpy as np
 
+
+CLASS_CODES = {'building': 0, 'foliage': 1, 'text': 2}
+
+
 class TransformedHuaweiDataset(Dataset):
     """Class for loading the transformed Huawei dataset"""
     def __init__(self, root_dir=None, transform=None):
@@ -187,7 +191,7 @@ class CsvLoader(Dataset):
             'clean': transforms.functional.to_tensor(clean_image),
             'noisy': transforms.functional.to_tensor(noisy_image),
             'iso': torch.tensor(self.info_df.iloc[idx]['iso'], dtype=torch.float32),
-            'class': self.info_df.iloc[idx]['class']
+            'class': torch.LongTensor(self.info_df.iloc[idx]['class'].replace(CLASS_CODES))
         }
 
     def random_split(self, test_ratio=0.5, seed=None):
@@ -215,6 +219,8 @@ def transform_sample(sample):
         'clean': clean_transforms(sample['clean']) if 'clean' in sample else None,
         'noisy': noisy_transforms(sample['noisy']),
         'iso': torch.FloatTensor([(sample['iso'] - 1215.32) / 958.13]),   # (x - mean) / std,
-        'class': sample['class']
+        'class': torch.LongTensor([CLASS_CODES[sample['class']]])
     }
-    return {k:v for k,v in transformed_sample.items() if v is not None}
+
+    return {k: v for k, v in transformed_sample.items() if v is not None}
+

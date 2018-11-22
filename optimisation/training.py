@@ -26,16 +26,19 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
             noisy = sample['noisy']
             clean = sample['clean']
             iso = sample['iso']
+            class_labels = sample['class'].squeeze(-1)
+
             # Send inputs to correct device
             noisy = noisy.cuda() if args.cuda else noisy
             clean = clean.cuda() if args.cuda else clean
             iso = iso.cuda() if args.cuda else iso
+            class_labels = class_labels.cuda() if args.cuda else class_labels
 
             # Clear past gradients
             optimizer.zero_grad()
 
             # Denoise the image and calculate the loss wrt target clean image
-            denoised = model(noisy, iso)
+            denoised = model(noisy, iso, class_labels)
             loss = criterion(denoised, clean)
 
             # Calculate gradients and update weights
@@ -98,13 +101,16 @@ def validate(args, val_loader, model, criterion, training_iters, summary_writer)
                 noisy = sample['noisy']
                 clean = sample['clean']
                 iso = sample['iso']
+                class_labels = sample['class'].squeeze(-1)
+
                 # Send inputs to correct device
                 noisy = noisy.cuda() if args.cuda else noisy
                 clean = clean.cuda() if args.cuda else clean
                 iso = iso.cuda() if args.cuda else iso
+                class_labels = class_labels.cuda() if args.cuda else class_labels
 
                 # Denoise the image and calculate the loss wrt target clean image
-                denoised = model(noisy, iso)
+                denoised = model(noisy, iso, class_labels)
                 loss = criterion(denoised, clean)
 
                 # Update meters
@@ -174,13 +180,16 @@ def evaluate_psnr_and_vgg_loss(args, model, data_loader):
                 noisy = sample['noisy']
                 clean = sample['clean']
                 iso = sample['iso']
+                class_labels = sample['class'].squeeze(-1)
+
                 # Send inputs to correct device
                 noisy = noisy.cuda() if args.cuda else noisy
                 clean = clean.cuda() if args.cuda else clean
                 iso = iso.cuda() if args.cuda else iso
+                class_labels = class_labels.cuda() if args.cuda else class_labels
 
                 # Denoise the image and calculate the loss wrt target clean image
-                denoised = model(noisy, iso)
+                denoised = model(noisy, iso, class_labels)
                 psnr = psnr_calculator(denoised, clean).mean()
                 ssim = ssim_calculator(denoised, clean).mean()
                 vgg_loss = vgg_loss_calculator(denoised, clean)
