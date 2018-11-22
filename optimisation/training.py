@@ -62,7 +62,8 @@ def train(args, train_loader, model, criterion, optimizer, epoch, summary_writer
             pbar.update()
 
             # Write the results to tensorboard
-            summary_writer.add_scalar('Train/Loss', loss, (epoch * steps) + i)
+            if summary_writer is not None:
+                summary_writer.add_scalar('Train/Loss', loss, (epoch * steps) + i)
 
     average_loss = loss_meter.mean
     print("===> Average total loss: {:4f}".format(average_loss))

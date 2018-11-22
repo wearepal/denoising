@@ -51,6 +51,8 @@ def parse_arguments(raw_args=None):
                         help='number of total epochs to run (default: 100)')
     parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
                         help='manual epoch number (useful on restarts)')
+    parser.add_argument('--pretrain_epochs', default=2, type=int, metavar='N',
+                        help='number of epochs to pre-train the generator for (default: 2)')
 
     parser.add_argument('-trb', '--train_batch_size', default=256, type=int,
                         metavar='N', help='mini-batch size for training data (default: 256)')
@@ -198,7 +200,7 @@ def main(args):
 
     # pretrain generator
     for epoch in range(2):
-        train(args, train_loader, generator, content_criterion, gen_optimizer, epoch, writer)
+        train(args, train_loader, generator, content_criterion, gen_optimizer, epoch, None)
 
     for epoch in range(args.start_epoch, args.epochs):
         training_iters = (epoch + 1) * len(train_loader)
