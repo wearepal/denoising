@@ -51,8 +51,8 @@ def parse_arguments(raw_args=None):
                         help='number of total epochs to run (default: 100)')
     parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
                         help='manual epoch number (useful on restarts)')
-    parser.add_argument('--pretrain_epochs', default=2, type=int, metavar='N',
-                        help='number of epochs to pre-train the generator for (default: 2)')
+    parser.add_argument('--pretrain_epochs', default=0, type=int, metavar='N',
+                        help='number of epochs to pre-train the generator for (default: 0)')
 
     parser.add_argument('-trb', '--train_batch_size', default=256, type=int,
                         metavar='N', help='mini-batch size for training data (default: 256)')
@@ -76,7 +76,7 @@ def parse_arguments(raw_args=None):
     # model parameters
     parser.add_argument('-gen', '--generator', type=str, default='SimpleGatedCNN',
                         help='model to use as the generator')
-    parser.add_argument('-disc', '--discriminator', type=str, default='GatedDiscriminator',
+    parser.add_argument('-disc', '--discriminator', type=str, default='SimpleDiscriminator',
                         help='model to use as the discriminator')
     parser.add_argument('--args_to_loss', action='store_true', default=False,
                         help='whether to pass the commandline arguments to the loss function')
