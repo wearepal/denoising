@@ -123,7 +123,8 @@ def train_gan(args, train_loader, generator, discriminator, content_criterion,
             denoised = generator(noisy, iso, class_labels)
             generator_content_loss = content_criterion(denoised, clean)
             generator_adversarial_loss = -discriminator(denoised).mean()  # applies only to wasserstein and hinge loss
-            generator_total_loss = generator_content_loss + args.adv_weight * generator_adversarial_loss
+            generator_adversarial_loss *= args.adv_weight
+            generator_total_loss = generator_content_loss + generator_adversarial_loss
 
             # Calculate gradients and update weights
             generator_total_loss.backward()
