@@ -96,7 +96,7 @@ def train_gan(args, train_loader, generator, discriminator, content_criterion,
             iso = iso.cuda() if args.cuda else iso
             class_labels = class_labels.cuda() if args.cuda else class_labels
             # freeze generator's gradients; enable discriminator training
-            generator.eval()
+
             discriminator.train()
 
             denoised = generator(noisy, iso, class_labels)
@@ -105,6 +105,7 @@ def train_gan(args, train_loader, generator, discriminator, content_criterion,
             # =========================
             for _ in range(args.disc_iters):
                 # Clear past gradients
+                gen_optimizer.zero_grad()
                 disc_optimizer.zero_grad()
 
                 disc_loss = adv_criterion(denoised, clean, discriminator)
@@ -115,11 +116,8 @@ def train_gan(args, train_loader, generator, discriminator, content_criterion,
             # ====================
             # Train the generator
             # ====================
-            # freeze discriminator's gradients; enable generator training
-            generator.train()
-            discriminator.eval()
-
             gen_optimizer.zero_grad()
+            disc_optimizer.zero_grad()
 
             generator_content_loss = content_criterion(denoised, clean)
             generator_adversarial_loss = -discriminator(denoised).mean()  # applies only to wasserstein and hinge loss
