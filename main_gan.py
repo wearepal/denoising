@@ -72,6 +72,7 @@ def parse_arguments(raw_args=None):
     parser.add_argument('--content_loss', type=str, default='MSELoss',
                         help='content loss for the generator')
     parser.add_argument('--adv_loss', type=str, default='HingeLossGAN', help='adversarial loss')
+    parser.add_argument('--adv_weight', type=float, default=10, help='weight to place on adversarial loss')
 
     # model parameters
     parser.add_argument('-gen', '--generator', type=str, default='SimpleGatedCNN',
