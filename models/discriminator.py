@@ -29,7 +29,7 @@ class SimpleDiscriminator(nn.Module):
 
         self.model = nn.ModuleList(layers)
 
-        self.global_pooling = nn.AvgPool2d(in_dim)
+        self.global_pooling = nn.AvgPool2d(int(in_dim))
         self.fc = nn.Linear(int(in_channels), 1)
 
     def forward(self, x):
