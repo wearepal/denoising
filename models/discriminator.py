@@ -25,12 +25,12 @@ class SimpleDiscriminator(nn.Module):
                              num_classes=args.num_classes)
             layers.append(conv)
             in_channels = out_channels
-            in_dim /= stride
+            in_dim //= stride
 
         self.model = nn.ModuleList(layers)
 
         # self.global_pooling = nn.AvgPool2d(in_dim)
-        self.fc = nn.Linear(in_channels * in_dim ** 2, 1)
+        self.fc = nn.Linear(int(in_channels * in_dim ** 2), 1)
 
     def forward(self, x):
         out = x
