@@ -157,7 +157,7 @@ def main(args):
 
     # discriminator
     discriminator = getattr(models, args.discriminator)(args)
-    apply_spectral_norm(generator)  # apply spectral normalization to all discriminator layers
+    apply_spectral_norm(discriminator)  # apply spectral normalization to all discriminator layers
     discriminator = discriminator.cuda() if args.cuda else discriminator
 
     gen_optimizer = getattr(torch.optim, args.optim)(generator.parameters(), lr=args.gen_learning_rate)
