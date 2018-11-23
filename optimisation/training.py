@@ -96,7 +96,7 @@ def train_gan(args, train_loader, generator, discriminator, content_criterion,
             iso = iso.cuda() if args.cuda else iso
             class_labels = class_labels.cuda() if args.cuda else class_labels
             # freeze generator's gradients; enable discriminator training
-            gen_optimizer.eval()
+            generator.eval()
             discriminator.train()
 
             denoised = generator(noisy, iso, class_labels)
@@ -116,7 +116,7 @@ def train_gan(args, train_loader, generator, discriminator, content_criterion,
             # Train the generator
             # ====================
             # freeze discriminator's gradients; enable generator training
-            gen_optimizer.train()
+            generator.train()
             discriminator.eval()
 
             gen_optimizer.zero_grad()
