@@ -61,18 +61,19 @@ def parse_arguments(raw_args=None):
 
     # optimization
     parser.add_argument('--optim', type=str, default='Adam')
-    parser.add_argument('-lrg', '--gen_learning_rate', default=1e-5, type=float,
-                        metavar='LR', help='initial learning rate (default: 1e-5)')
-    parser.add_argument('-lrd', '--disc_learning_rate', default=2e-4, type=float,
-                        metavar='LR', help='initial learning rate (default: 2e-4)')
-    parser.add_argument('--disc_iters', type=int, default=2,
-                        help='number of discriminator steps per generator step')
+    parser.add_argument('-lrg', '--gen_learning_rate', default=1e-4, type=float,
+                        metavar='LR', help='initial learning rate (default: 1e-4)')
+    parser.add_argument('-lrd', '--disc_learning_rate', default=4e-4, type=float,
+                        metavar='LR', help='initial learning rate (default: 4e-4)')
+    parser.add_argument('--disc_iters', type=int, default=1,
+                        help='number of discriminator steps per generator step (default: 1)')
 
     # loss
     parser.add_argument('--content_loss', type=str, default='MSELoss',
                         help='content loss for the generator')
     parser.add_argument('--adv_loss', type=str, default='HingeLossGAN', help='adversarial loss')
-    parser.add_argument('--adv_weight', type=float, default=10, help='weight to place on adversarial loss')
+    parser.add_argument('--adv_weight', type=float, default=1e-3,
+                        help='weight to place on adversarial loss (default: 1e-3)')
 
     # model parameters
     parser.add_argument('-gen', '--generator', type=str, default='SimpleGatedCNN',
