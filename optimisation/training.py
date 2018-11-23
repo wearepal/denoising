@@ -79,10 +79,6 @@ def train_gan(args, train_loader, generator, discriminator, content_criterion,
     content_loss_meter = AverageValueMeter()
     adv_loss_meter = AverageValueMeter()
 
-    # Switch to train mode
-    generator.train()
-    discriminator.train()
-
     end = time.time()
     steps = len(train_loader)
     # Start progress bar. Maximum value = number of batches.
@@ -99,8 +95,10 @@ def train_gan(args, train_loader, generator, discriminator, content_criterion,
             clean = clean.cuda() if args.cuda else clean
             iso = iso.cuda() if args.cuda else iso
             class_labels = class_labels.cuda() if args.cuda else class_labels
+            # freeze generator's gradients; enable discriminator training
+            gen_optimizer.eval()
+            discriminator.train()
 
-            gen_optimizer.zero_grad()
             denoised = generator(noisy, iso, class_labels)
             # =========================
             # Train the discriminator
@@ -117,8 +115,10 @@ def train_gan(args, train_loader, generator, discriminator, content_criterion,
             # ====================
             # Train the generator
             # ====================
-            # Clear past gradients
-            disc_optimizer.zero_grad()
+            # freeze discriminator's gradients; enable generator training
+            gen_optimizer.train()
+            discriminator.eval()
+
             gen_optimizer.zero_grad()
 
             generator_content_loss = content_criterion(denoised, clean)
