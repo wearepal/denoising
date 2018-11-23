@@ -12,7 +12,7 @@ class SimpleDiscriminator(nn.Module):
         layers = [ConvLayer(args.cnn_in_channels, 64, stride=1, normalize=False,
                             layer_activation=nn.LeakyReLU(0.1), num_classes=args.num_classes)]
 
-        in_channels = layers[0].in_channels
+        in_channels = layers[0].out_channels
         in_dim = PATCH_SIZE / layers[0].stride  # patch size is 64
 
         # layer_params = [(32, 4, 2), (64, 3, 1), (64, 4, 2), (128, 3, 1),
