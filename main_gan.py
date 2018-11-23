@@ -60,7 +60,8 @@ def parse_arguments(raw_args=None):
                         metavar='N', help='mini-batch size for test data (default: 256)')
 
     # optimization
-    parser.add_argument('--optim', type=str, default='Adam')
+    parser.add_argument('--betas', type=tuple, default=(0, 0.9),
+                        help='beta values for Adam optimizer (default: (0, 0.9)')
     parser.add_argument('-lrg', '--gen_learning_rate', default=1e-4, type=float,
                         metavar='LR', help='initial learning rate (default: 1e-4)')
     parser.add_argument('-lrd', '--disc_learning_rate', default=4e-4, type=float,
@@ -162,8 +163,10 @@ def main(args):
     apply_spectral_norm(discriminator)  # apply spectral normalization to all discriminator layers
     discriminator = discriminator.cuda() if args.cuda else discriminator
 
-    gen_optimizer = getattr(torch.optim, args.optim)(generator.parameters(), lr=args.gen_learning_rate)
-    disc_optimizer = getattr(torch.optim, args.optim)(discriminator.parameters(), lr=args.disc_learning_rate)
+    gen_optimizer = torch.optim.Adam(generator.parameters(), lr=args.gen_learning_rate,
+                                     betas=args.betas)
+    disc_optimizer = torch.optim.Adam(discriminator.parameters(), lr=args.disc_learning_rate,
+                                      betas=args.betas)
 
     criterion_constructor = getattr(loss, args.content_loss)
     content_criterion = criterion_constructor(args) if args.args_to_loss else criterion_constructor()
