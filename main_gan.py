@@ -95,7 +95,7 @@ def parse_arguments(raw_args=None):
     # CNN
     parser.add_argument('--cnn_in_channels', type=int, default=3)
     parser.add_argument('--cnn_hidden_channels', type=int, default=32)
-    parser.add_argument('--cnn_num_hidden_layers', type=int, default=7)
+    parser.add_argument('--cnn_hidden_layers', type=int, default=7)
 
     parser.add_argument('--disc_hidden_channels', type=int, default=128)
 
