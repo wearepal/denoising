@@ -159,11 +159,7 @@ def main(args):
         if checkpoint is not None:
             args.start_epoch = checkpoint['epoch'] + 1
             best_loss = checkpoint['best_loss']
-            try:
-                model.load_state_dict(checkpoint['model'])
-            except KeyError:
-                # was previously named 'state_dict' I think
-                model.load_state_dict(checkpoint['state_dict'])
+            model.load_state_dict(checkpoint['model'])
             optimizer.load_state_dict(checkpoint['optimizer'])
 
     if args.evaluate:
