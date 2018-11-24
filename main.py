@@ -79,7 +79,7 @@ def parse_arguments(raw_args=None):
     # CNN
     parser.add_argument('--cnn_in_channels', type=int, default=3)
     parser.add_argument('--cnn_hidden_channels', type=int, default=32)
-    parser.add_argument('--cnn_num_hidden_layers', type=int, default=7)
+    parser.add_argument('--cnn_hidden_layers', type=int, default=7)
     parser.add_argument('--interpolate', action='store_true', default=False,
                         help='interpolate rather than learn noise as an image residual')
     parser.add_argument('-ni', '--no_iso', action='store_true', default=False,
@@ -161,7 +161,7 @@ def main(args):
         if checkpoint is not None:
             args.start_epoch = checkpoint['epoch'] + 1
             best_loss = checkpoint['best_loss']
-            model.load_state_dict(checkpoint['state_dict'])
+            model.load_state_dict(checkpoint['model'])
             optimizer.load_state_dict(checkpoint['optimizer'])
 
     if args.evaluate:

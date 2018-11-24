@@ -16,5 +16,5 @@ run(dict(
     gpu_num=0,
     cnn_in_channels=3,
     cnn_hidden_channels=32,
-    cnn_num_hidden_layers=7,
+    cnn_hidden_layers=7,
 ))
