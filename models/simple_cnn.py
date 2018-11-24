@@ -15,7 +15,7 @@ class SimpleCNN(nn.Module):
         # Input layer
         layers = [ConvLayer(args.cnn_in_channels, args.cnn_hidden_channels, num_classes=args.num_classes)]
         # Hidden layers
-        for _ in range(args.cnn_num_hidden_layers):
+        for _ in range(args.cnn_hidden_layers):
             layers.append(ConvLayer(args.cnn_hidden_channels, args.cnn_hidden_channels,
                                     num_classes=args.num_classes))
         # Output layer
@@ -48,7 +48,7 @@ class SimpleGatedCNN(nn.Module):
         layers = [GatedConvLayer(args.cnn_in_channels, args.cnn_hidden_channels,
                                  local_condition=args.iso, num_classes=args.num_classes)]
         # Hidden layers
-        for _ in range(args.cnn_num_hidden_layers):
+        for _ in range(args.cnn_hidden_layers):
             layers.append(GatedConvLayer(args.cnn_hidden_channels, args.cnn_hidden_channels,
                                          num_classes=args.num_classes, local_condition=args.iso))
         # Output layer

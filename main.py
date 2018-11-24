@@ -77,7 +77,7 @@ def parse_arguments(raw_args=None):
     # CNN
     parser.add_argument('--cnn_in_channels', type=int, default=3)
     parser.add_argument('--cnn_hidden_channels', type=int, default=32)
-    parser.add_argument('--cnn_num_hidden_layers', type=int, default=7)
+    parser.add_argument('--cnn_hidden_layers', type=int, default=7)
     parser.add_argument('--interpolate', action='store_true', default=False,
                         help='interpolate rather than learn noise as an image residual')
     parser.add_argument('-ni', '--no_iso', action='store_true', default=False,
@@ -106,7 +106,7 @@ def main(args):
     random.seed(args.seed)
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
-    torch.cuda.manual_seed_all(args.seed)    
+    torch.cuda.manual_seed_all(args.seed)
     if args.cuda:
         # gpu device number
         torch.cuda.set_device(args.gpu_num)
@@ -114,7 +114,7 @@ def main(args):
     if args.run_on_test:
         test(args, transform_sample)
         return
-    
+
     # Create results path
     if args.save_dir: # If specified
         save_path = Path(args.save_dir).resolve()
