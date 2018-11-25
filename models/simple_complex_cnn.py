@@ -5,7 +5,7 @@ from models import GatedConvLayer
 from models.complex_layers import ComplexGatedConvLayer
 
 
-class SimpleComplexGatedCNN(nn.Module):
+class ComplexGatedCNN(nn.Module):
     """
     Simple generator network with gated convolutions and a
     uniform number of filters throughout the hidden layers.
@@ -16,18 +16,15 @@ class SimpleComplexGatedCNN(nn.Module):
         num_hidden_channels = args.cnn_hidden_channels // 2
         # Input layer
         layers = [ComplexGatedConvLayer(args.cnn_in_channels, num_hidden_channels,
-                                        local_condition=args.iso)]
+                                        local_condition=args.iso, num_classes=args.num_classes)]
         # Hidden layers
-        for _ in range(args.cnn_num_hidden_layers):
+        for _ in range(args.cnn_hidden_layers):
             layers.append(ComplexGatedConvLayer(num_hidden_channels, num_hidden_channels,
                                                 local_condition=args.iso, num_classes=args.num_classes))
 
-            layers.append(ComplexGatedConvLayer(num_hidden_channels, num_hidden_channels,
-                                                local_condition=args.iso))
-
         layers.append(ComplexGatedConvLayer(num_hidden_channels, args.cnn_in_channels,
                                             layer_activation=None, normalize=False,
-                                            local_condition=args.iso))
+                                            local_condition=args.iso, num_classes=args.num_classes))
 
         self.model = nn.ModuleList(layers)
 
@@ -37,7 +34,7 @@ class SimpleComplexGatedCNN(nn.Module):
         out = torch.rfft(x, signal_ndim=2)
 
         for layer in self.model:
-            out = layer(out, c)
+            out = layer(out, c, class_labels)
 
         # inverse fourier transform
         out = torch.irfft(out, signal_ndim=2, signal_sizes=x.shape[2:])
