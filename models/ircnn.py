@@ -52,6 +52,7 @@ class GatedIRCNN(nn.Module):
     def forward(self, x, c=None, class_labels=None):
         noise_residual = x
         for layer in self.model:
-            noise_residual = layer(x, c, class_labels)
+            noise_residual = layer(noise_residual, c, class_labels)
         denoised = x - noise_residual
+
         return denoised
