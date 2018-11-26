@@ -34,7 +34,7 @@ class SimpleDiscriminator(nn.Module):
         # ]
 
         m_classifier = [
-            nn.Linear(in_channels * in_dim**2, 1024),
+            nn.Linear(int(in_channels * in_dim**2), 1024),
             nn.LeakyReLU(0.1, inplace=True),
             nn.Linear(1024, 1)
         ]
