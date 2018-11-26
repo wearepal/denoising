@@ -28,16 +28,25 @@ class SimpleDiscriminator(nn.Module):
 
         self.model = nn.ModuleList(layers)
 
-        self.global_pooling = nn.AvgPool2d(int(in_dim))
-        self.fc = nn.Linear(int(in_channels), 1)
+        # m_classifier = [
+        #     nn.AvgPool2d(int(in_dim)),
+        #     nn.Linear(in_channels, 1),
+        # ]
+
+        m_classifier = [
+            nn.Linear(in_channels * in_dim**2, 1024),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Linear(1024, 1)
+        ]
+        self.classifier = nn.Sequential(*m_classifier)
 
     def forward(self, x):
         out = x
 
         for layer in self.model:
             out = layer(out)
-        out = self.global_pooling(out)
-        out = self.fc(out.view(x.size(0), -1))
+
+        out = self.classifier(out.view(x.size(0), -1))
 
         return out
 
