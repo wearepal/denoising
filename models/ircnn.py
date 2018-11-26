@@ -47,9 +47,11 @@ class GatedIRCNN(nn.Module):
         # Output layer
         layers.append(GatedConvLayer(64, args.cnn_in_channels, normalize=False, layer_activation=None,
                                      local_condition=args.iso))
-        self.model = nn.Sequential(*layers)
+        self.model = nn.ModuleList(layers)
 
-    def forward(self, x, c=None):
-        noise_residual = self.model(x)
+    def forward(self, x, c=None, class_labels=None):
+        noise_residual = x
+        for layer in self.model:
+            noise_residual = layer(x, c, class_labels)
         denoised = x - noise_residual
         return denoised
