@@ -5,24 +5,15 @@ from utils.metrics import *
 from utils.functions import MeanShift
 
 
-class _FeatureExtractor(nn.Module):
-    def __init__(self, cnn, feature_layer=11):
-        super().__init__()
-        self.features = nn.Sequential(*list(cnn.features.children())[:(feature_layer+1)])
-
-    def forward(self, x):
-        return self.features(x)
-
-
 class VGGLoss(nn.Module):
 
     def __init__(self, args, rgb_range=2, prefactor=0.006):
         super().__init__()
         vgg_features = torchvision.models.vgg19(pretrained=True).features
         modules = [m for m in vgg_features]
-        if args.vgg_feature_layer == '22':
+        if args.vgg_feature_layer == 22:
             self.vgg = nn.Sequential(*modules[:8])
-        elif args.vgg_feature_layer == '54':
+        else:
             self.vgg = nn.Sequential(*modules[:35])
 
         vgg_mean = (0.485, 0.456, 0.406)
