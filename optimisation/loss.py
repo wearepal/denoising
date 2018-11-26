@@ -13,7 +13,7 @@ class VGGLoss(nn.Module):
         modules = [m for m in vgg_features]
         if args.vgg_feature_layer == 22:
             self.vgg = nn.Sequential(*modules[:8])
-        else:
+        elif args.vgg_feature_layer == 55:
             self.vgg = nn.Sequential(*modules[:35])
 
         vgg_mean = (0.485, 0.456, 0.406)
