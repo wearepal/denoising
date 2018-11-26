@@ -10,9 +10,10 @@ from torch.utils.data import DataLoader
 from tensorboardX import SummaryWriter
 
 from optimisation.testing import test
-from optimisation.training import train, validate, evaluate_psnr_and_vgg_loss
+from optimisation.training import train, train_gan, validate, evaluate_psnr_and_vgg_loss
 from optimisation import loss
 from utils import TransformedHuaweiDataset, transform_sample
+from utils.functions import apply_spectral_norm
 import models
 
 
@@ -21,7 +22,7 @@ def parse_arguments(raw_args=None):
 
     parser.add_argument('-t', '--run_on_test', nargs='+',
                         help='Evaluate a model (checkpoint) on test set. '
-                        'Args: Checkpoint path, Test data path[, Save path]')
+                             'Args: Checkpoint path, Test data path[, Save path]')
 
     parser.add_argument('-dd', '--data_dir', help='location of transformed data')
     parser.add_argument('-ts', '--test_split', help='Fraction of data to be used for validation',
@@ -50,21 +51,36 @@ def parse_arguments(raw_args=None):
                         help='number of total epochs to run (default: 100)')
     parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
                         help='manual epoch number (useful on restarts)')
+    parser.add_argument('--pretrain_epochs', default=0, type=int, metavar='N',
+                        help='number of epochs to pre-train the generator for (default: 0)')
 
     parser.add_argument('-trb', '--train_batch_size', default=256, type=int,
                         metavar='N', help='mini-batch size for training data (default: 256)')
     parser.add_argument('-teb', '--test_batch_size', default=256, type=int,
                         metavar='N', help='mini-batch size for test data (default: 256)')
 
-    parser.add_argument('-lr', '--learning_rate', default=0.005, type=float,
-                        metavar='LR', help='initial learning rate (default: 0.005)')
-    parser.add_argument('--adv_weight', default=1e-3, type=float,
-                        metavar='W', help='weight on adversarial loss (default: 1e-3)')
+    # optimization
+    parser.add_argument('--betas', type=tuple, default=(0, 0.9),
+                        help='beta values for Adam optimizer (default: (0, 0.9)')
+    parser.add_argument('-lrg', '--gen_learning_rate', default=1e-4, type=float,
+                        metavar='LR', help='initial learning rate (default: 1e-4)')
+    parser.add_argument('-lrd', '--disc_learning_rate', default=4e-4, type=float,
+                        metavar='LR', help='initial learning rate (default: 4e-4)')
+    parser.add_argument('--disc_iters', type=int, default=1,
+                        help='number of discriminator steps per generator step (default: 1)')
+
+    # loss
+    parser.add_argument('--content_loss', type=str, default='MSELoss',
+                        help='content loss for the generator')
+    parser.add_argument('--adv_loss', type=str, default='HingeLossGAN', help='adversarial loss')
+    parser.add_argument('--adv_weight', type=float, default=1e-3,
+                        help='weight to place on adversarial loss (default: 1e-3)')
 
     # model parameters
-    parser.add_argument('--loss', type=str, default='MSELoss')
-    parser.add_argument('--model', type=str, default='SimpleCNN')
-    parser.add_argument('--optim', type=str, default='Adam')
+    parser.add_argument('-gen', '--generator', type=str, default='SimpleGatedCNN',
+                        help='model to use as the generator')
+    parser.add_argument('-disc', '--discriminator', type=str, default='SimpleDiscriminator',
+                        help='model to use as the discriminator')
     parser.add_argument('--args_to_loss', action='store_true', default=False,
                         help='whether to pass the commandline arguments to the loss function')
 
@@ -80,6 +96,9 @@ def parse_arguments(raw_args=None):
     parser.add_argument('--cnn_in_channels', type=int, default=3)
     parser.add_argument('--cnn_hidden_channels', type=int, default=32)
     parser.add_argument('--cnn_hidden_layers', type=int, default=7)
+
+    parser.add_argument('--disc_hidden_channels', type=int, default=128)
+
     parser.add_argument('--interpolate', action='store_true', default=False,
                         help='interpolate rather than learn noise as an image residual')
     parser.add_argument('-ni', '--no_iso', action='store_true', default=False,
@@ -118,10 +137,10 @@ def main(args):
         return
 
     # Create results path
-    if args.save_dir: # If specified
+    if args.save_dir:  # If specified
         save_path = Path(args.save_dir).resolve()
     else:
-        save_path = Path().resolve().parent / "results" / args.model / str(round(time.time()))
+        save_path = Path().resolve().parent / "results" / args.generator / str(round(time.time()))
         save_path.parent.mkdir(exist_ok=True)
     save_path.mkdir()  # Will throw an exception if the path exists OR the parent path _doesn't_
 
@@ -134,13 +153,27 @@ def main(args):
     torch.save(args, save_path / 'denoising.config')
     writer = SummaryWriter(save_path / 'summaries')
 
-    # construct network from args
-    model = getattr(models, args.model)(args)
-    model = model.cuda() if args.cuda else model
-    optimizer = getattr(torch.optim, args.optim)(model.parameters(), lr=args.learning_rate)
-    criterion_constructor = getattr(loss, args.loss)
-    criterion = criterion_constructor(args) if args.args_to_loss else criterion_constructor()
-    criterion = criterion.cuda() if args.cuda else criterion
+    # generator
+    generator = getattr(models, args.generator)(args)
+    apply_spectral_norm(generator)  # apply spectral normalization to all generator layers
+    generator = generator.cuda() if args.cuda else generator
+
+    # discriminator
+    discriminator = getattr(models, args.discriminator)(args)
+    apply_spectral_norm(discriminator)  # apply spectral normalization to all discriminator layers
+    discriminator = discriminator.cuda() if args.cuda else discriminator
+
+    gen_optimizer = torch.optim.Adam(generator.parameters(), lr=args.gen_learning_rate,
+                                     betas=args.betas)
+    disc_optimizer = torch.optim.Adam(discriminator.parameters(), lr=args.disc_learning_rate,
+                                      betas=args.betas)
+
+    criterion_constructor = getattr(loss, args.content_loss)
+    content_criterion = criterion_constructor(args) if args.args_to_loss else criterion_constructor()
+    content_criterion = content_criterion.cuda() if args.cuda else content_criterion
+
+    adv_criterion = getattr(loss, args.adv_loss)()
+    adv_criterion = adv_criterion.cuda() if args.cuda else adv_criterion
 
     dataset = TransformedHuaweiDataset(root_dir=args.data_dir, transform=transform_sample)
     train_dataset, val_dataset = dataset.random_split(test_ratio=args.test_split,
@@ -161,24 +194,34 @@ def main(args):
         if checkpoint is not None:
             args.start_epoch = checkpoint['epoch'] + 1
             best_loss = checkpoint['best_loss']
-            model.load_state_dict(checkpoint['model'])
-            optimizer.load_state_dict(checkpoint['optimizer'])
+            generator.load_state_dict(checkpoint['generator'])
+            discriminator.load_state_dict(checkpoint['discriminator'])
+            gen_optimizer.load_state_dict(checkpoint['gen_optimizer'])
+            disc_optimizer.load_state_dict(checkpoint['disc_optimizer'])
 
     if args.evaluate:
         # Evaluate model using PSNR and SSIM metrics
-        evaluate_psnr_and_vgg_loss(args, model, val_loader)
+        evaluate_psnr_and_vgg_loss(args, generator, val_loader)
         return
+
+    # pre-train generator
+    for epoch in range(args.pretrain_epochs):
+        print("===> Pre-training generator")
+        train(args, train_loader, generator, content_criterion, gen_optimizer, epoch, None)
 
     for epoch in range(args.start_epoch, args.epochs):
         training_iters = (epoch + 1) * len(train_loader)
 
         # Train
         print("===> Training on Epoch %d" % epoch)
-        train(args, train_loader, model, criterion, optimizer, epoch, writer)
+        train_gan(args, train_loader, generator, discriminator,
+                  content_criterion, adv_criterion,
+                  gen_optimizer, disc_optimizer,
+                  epoch, writer)
 
         # Validate
         print("===> Validating on Epoch %d" % epoch)
-        val_loss = validate(args, val_loader, model, criterion, training_iters, writer)
+        val_loss = validate(args, val_loader, generator, content_criterion, training_iters, writer)
 
         is_best = val_loss < best_loss
         best_loss = min(val_loss, best_loss)
@@ -187,14 +230,16 @@ def main(args):
         model_filename = 'checkpoint_%03d.pth.tar' % epoch
         checkpoint = {
             'epoch': epoch,
-            'model': model.state_dict(),
-            'optimizer': optimizer.state_dict(),
+            'generator': generator.state_dict(),
+            'discriminator': discriminator.state_dict(),
+            'gen_optimizer': gen_optimizer.state_dict(),
+            'disc_optimizer': disc_optimizer.state_dict(),
             'best_loss': best_loss
         }
         save_checkpoint(checkpoint, model_filename, is_best, save_path)
 
     # Evaluate model using PSNR and SSIM metrics
-    evaluate_psnr_and_vgg_loss(args, model, val_loader)
+    evaluate_psnr_and_vgg_loss(args, generator, val_loader)
 
 
 def save_checkpoint(checkpoint, filename, is_best, save_path):
