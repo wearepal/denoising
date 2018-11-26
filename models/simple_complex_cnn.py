@@ -18,8 +18,9 @@ class ComplexGatedCNN(nn.Module):
         layers = [ComplexGatedConvLayer(args.cnn_in_channels, num_hidden_channels,
                                         local_condition=args.iso, num_classes=args.num_classes)]
         # Hidden layers
-        for _ in range(args.cnn_hidden_layers):
+        for d in [2, 4, 8, 16, 1]:
             layers.append(ComplexGatedConvLayer(num_hidden_channels, num_hidden_channels,
+                                                dilation=d, preserve_size=True,
                                                 local_condition=args.iso, num_classes=args.num_classes))
 
         layers.append(ComplexGatedConvLayer(num_hidden_channels, args.cnn_in_channels,
