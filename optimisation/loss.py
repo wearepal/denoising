@@ -2,6 +2,7 @@ import torchvision
 import torch.nn as nn
 from torch.nn import MSELoss
 from utils.metrics import *
+from utils.functions import MeanShift
 
 
 class _FeatureExtractor(nn.Module):
@@ -14,40 +15,35 @@ class _FeatureExtractor(nn.Module):
 
 
 class VGGLoss(nn.Module):
-    """
-    The VGG loss based on the ReLU activation layers of the
-    pre-trained 19 layer VGG network. This is calculated as
-    the euclidean distance between the feature representations
-     of a reconstructed image.
-    """
-    feature_layer_default = 11  # VGG19 layer number from which to extract features
 
-    def __init__(self, args=None, prefactor=0.006):
-        """
-        Args:
-            prefactor: prefactor by which to scale the loss.
-            Rescaling by a factor of 1 / 12.75 gives VGG losses of a scale that
-            is comparable to MSE loss. This is equivalent to multiplying with a
-            rescaling factor of ≈ 0.006.
-        """
+    def __init__(self, args, rgb_range=2, prefactor=0.006):
         super().__init__()
-        vgg = torchvision.models.vgg19(pretrained=True)
-        self.criterion = nn.MSELoss()
-        feature_layer = self.feature_layer_default if args is None else args.vgg_feature_layer
-        self.feature_extractor = _FeatureExtractor(vgg, feature_layer=feature_layer)
+        vgg_features = torchvision.models.vgg19(pretrained=True).features
+        modules = [m for m in vgg_features]
+        if args.vgg_feature_layer == '22':
+            self.vgg = nn.Sequential(*modules[:8])
+        elif args.vgg_feature_layer == '54':
+            self.vgg = nn.Sequential(*modules[:35])
+
+        vgg_mean = (0.485, 0.456, 0.406)
+        vgg_std = (0.229 * rgb_range, 0.224 * rgb_range, 0.225 * rgb_range)
+        self.sub_mean = MeanShift(rgb_range, vgg_mean, vgg_std)
+        self.vgg.requires_grad = False
         self.prefactor = prefactor
 
-    def forward(self, fake, real):
-        """
-        Args:
-            fake: Fake samples produced by the generator
-            real: Real (ground-truth) samples
-        Returns:
-            VGG loss
-        """
-        real_features = self.feature_extractor(real).detach()
-        fake_features = self.feature_extractor(fake)
-        return self.prefactor * self.criterion(fake_features, real_features)
+    def forward(self, noisy, clean):
+        def _forward(x):
+            x = self.sub_mean(x)
+            x = self.vgg(x)
+            return x
+
+        vgg_sr = _forward(noisy)
+        with torch.no_grad():
+            vgg_hr = _forward(clean.detach())
+
+        loss = self.prefactor * F.mse_loss(vgg_sr, vgg_hr)
+
+        return loss
 
 
 class WassersteinLossGAN(nn.Module):

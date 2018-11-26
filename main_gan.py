@@ -107,7 +107,7 @@ def parse_arguments(raw_args=None):
                         help='use the class information of images')
 
     # VGG loss
-    parser.add_argument('--vgg_feature_layer', type=int, default=16,
+    parser.add_argument('--vgg_feature_layer', type=int, default=54,
                         help='VGG19 layer number from which to extract features')
 
     args = parser.parse_args(raw_args)
