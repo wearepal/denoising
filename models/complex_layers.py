@@ -51,7 +51,7 @@ class ComplexConv2d(nn.Module):
 
         if self.bias is not None:
             if self.local_condition and c is not None:
-                out += self.bias * c
+                out += self.bias * c.view(-1, 1, 1, 1, 1)
             else:
                 out += self.bias
 
