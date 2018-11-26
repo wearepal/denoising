@@ -88,8 +88,8 @@ def parse_arguments(raw_args=None):
                         help='use the class information of images')
 
     # VGG loss
-    parser.add_argument('--vgg_feature_layer', type=int, default=11,
-                        help='VGG19 layer number from which to extract features')
+    parser.add_argument('--vgg_feature_layer', type=str, default='54',
+                        choices=('22', '54'), help='VGG19 layer number from which to extract features')
 
     args = parser.parse_args(raw_args)
     args.cuda = not args.no_cuda and torch.cuda.is_available()
