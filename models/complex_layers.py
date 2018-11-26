@@ -11,7 +11,8 @@ from models.layers import ConvLayerParent
 
 class ComplexConv2d(nn.Module):
 
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, bias=True):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1,
+                 bias=True, local_condition=False):
         super().__init__()
 
         self.in_channels = in_channels
@@ -19,6 +20,7 @@ class ComplexConv2d(nn.Module):
         self.kernel_size = kernel_size
         self.stride = stride
         self.padding = padding
+        self.local_condition = local_condition
 
         self.conv_real = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size,
                                    stride=stride, padding=padding, dilation=dilation, bias=False)
@@ -35,7 +37,7 @@ class ComplexConv2d(nn.Module):
         else:
             self.register_parameter('bias', None)
 
-    def forward(self, x):
+    def forward(self, x, c):
         """
         if x = a + ib, y = c + id, then:
         xy = (a + ib)(c + id) = (ac - bd) + i(ad + bc)
@@ -48,7 +50,10 @@ class ComplexConv2d(nn.Module):
         out = torch.cat([out_real[..., None], out_im[..., None]], dim=-1)
 
         if self.bias is not None:
-            out += self.bias
+            if self.local_condition and c is not None:
+                out += self.bias * c
+            else:
+                out += self.bias
 
         return out
 
@@ -57,12 +62,22 @@ class ComplexConvLayer(ConvLayerParent):
 
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, dilation=1,
                  layer_activation=nn.ReLU(inplace=True), num_norm_groups=0, num_classes=0,
-                 normalize=True, preserve_size=False):
+                 local_condition=False, normalize=True, preserve_size=False):
         super().__init__(in_channels, out_channels, kernel_size, stride, padding, dilation,
                          layer_activation, num_norm_groups, num_classes, normalize, preserve_size)
 
-        self.conv = ComplexConv2d(in_channels, out_channels, kernel_size, stride, self.padding, dilation, bias=normalize)
+        self.conv = ComplexConv2d(in_channels, out_channels, kernel_size, stride, self.padding, dilation,
+                                  bias=normalize, local_condition=local_condition)
         self.norm = complex_norm(out_channels, num_classes) if normalize else None
+
+    def forward(self, x, c=None, class_labels=None):
+        out = self.conv(x, c)
+        if self.norm is not None:
+            out = self.norm(out, class_labels) if self.conditional_norm else self.norm(out)
+        if self.layer_activation is not None:
+            out = self.layer_activation(out)
+
+        return out
 
 
 class ComplexGatedConv2d(nn.Module):
