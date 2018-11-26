@@ -17,15 +17,16 @@ class ComplexCNN(nn.Module):
         num_hidden_channels = args.cnn_hidden_channels // 2
         # Input layer
         layers = [ComplexConvLayer(args.cnn_in_channels, num_hidden_channels,
-                                   num_classes=args.num_classes)]
+                                   num_classes=args.num_classes, local_condition=args.iso)]
         # Hidden layers
         for d in [1, 4, 8, 16, 1]:
-            layers.append(ComplexConvLayer(num_hidden_channels, num_hidden_channels,
-                                           dilation=d, preserve_size=True, num_classes=args.num_classes))
+            layers.append(ComplexConvLayer(num_hidden_channels, num_hidden_channels, dilation=d,
+                                           preserve_size=True, num_classes=args.num_classes,
+                                           local_condition=args.iso))
 
         layers.append(ComplexConvLayer(num_hidden_channels, args.cnn_in_channels,
                                        layer_activation=None, normalize=False,
-                                       num_classes=args.num_classes))
+                                       num_classes=args.num_classes, local_condition=args.iso))
 
         self.model = nn.ModuleList(layers)
 
