@@ -31,13 +31,13 @@ class ComplexGatedCNN(nn.Module):
         self.residual = not args.interpolate
 
     def forward(self, x, c=None, class_labels=None):
-        out = torch.rfft(x, signal_ndim=2)
+        out = torch.rfft(x, onesided=False, signal_ndim=2)
 
         for layer in self.model:
             out = layer(out, c, class_labels)
 
         # inverse fourier transform
-        out = torch.irfft(out, signal_ndim=2, signal_sizes=x.shape[2:])
+        out = torch.irfft(out, signal_ndim=2, onesided=False, signal_sizes=x.shape[2:])
 
         if self.residual:   # learn noise residual
             out = out + x
