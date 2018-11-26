@@ -16,7 +16,7 @@ class SimpleDiscriminator(nn.Module):
         in_channels = layers[0].out_channels
         in_dim = PATCH_SIZE / layers[0].stride  # patch size is 64
 
-        layer_params = [(64, 3, 2), (128, 3, 1), (128, 3, 2), (256, 3, 1), (256, 3, 2), (512, 3, 2)]
+        layer_params = [(64, 3, 2), (128, 3, 1), (128, 3, 2), (256, 3, 1), (256, 3, 2), (512, 3, 1)]
 
         for out_channels, kernel_size, stride in layer_params:
             conv = ConvLayer(in_channels, out_channels, kernel_size=kernel_size, stride=stride,
