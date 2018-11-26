@@ -9,7 +9,7 @@ class HybridGatedCNN(nn.Module):
     """
     Hybrid dual-stream (one real, one complex) gated CNN
     """
-    def __init__(self, args, stream_length=3):
+    def __init__(self, args):
         super().__init__()
 
         num_real_filters = args.cnn_hidden_channels
@@ -17,30 +17,26 @@ class HybridGatedCNN(nn.Module):
 
         # Real stream
         real_layers = [GatedConvLayer(args.cnn_in_channels, num_real_filters)]
-        for i in range(stream_length):
-            dilation = 2 ** (i + 1)
-            # dilation = 1
+        for i in range(3):
             real_layer = GatedConvLayer(num_real_filters, num_real_filters,
-                                        local_condition=args.iso, dilation=dilation,
-                                        preserve_size=True)
+                                        local_condition=args.iso, num_classes=args.num_classes)
             real_layers.append(real_layer)
 
         # Complex stream
         complex_layers = [ComplexGatedConvLayer(args.cnn_in_channels, num_complex_filters,
-                                                local_condition=args.iso)]
-        for i in range(stream_length):
-            dilation = 2 ** (i + 1)  # double dilation factor each layer
+                                                local_condition=args.iso, num_classes=args.num_classes)]
+        for d in [2, 4, 8, 16]:
             complex_layer = ComplexGatedConvLayer(num_complex_filters, num_complex_filters,
-                                                  local_condition=args.iso, dilation=dilation,
-                                                  preserve_size=True)
+                                                  local_condition=args.iso, dilation=d,
+                                                  preserve_size=True, num_classes=args.num_classes)
             complex_layers.append(complex_layer)
 
         # Combine outputs of complex and real streams
         self.pooling_conv = GatedConvLayer(num_real_filters + num_complex_filters, num_real_filters,
-                                           local_condition=args.iso)
+                                           local_condition=args.iso, num_classes=args.num_classes)
         self.output_conv = GatedConvLayer(num_real_filters, args.cnn_in_channels,
                                           normalize=False, layer_activation=None,
-                                          local_condition=args.iso)
+                                          local_condition=args.iso, num_classes=args.num_classes)
 
         self.real_stream = nn.ModuleList(real_layers)
         self.complex_stream = nn.ModuleList(complex_layers)
