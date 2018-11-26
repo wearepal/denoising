@@ -28,11 +28,11 @@ class VGGLoss(nn.Module):
             x = self.vgg(x)
             return x
 
-        vgg_sr = _forward(noisy)
+        vgg_noisy = _forward(noisy)
         with torch.no_grad():
-            vgg_hr = _forward(clean.detach())
+            vgg_clean = _forward(clean.detach())
 
-        loss = self.prefactor * F.mse_loss(vgg_sr, vgg_hr)
+        loss = self.prefactor * F.mse_loss(vgg_noisy, vgg_clean)
 
         return loss
 
