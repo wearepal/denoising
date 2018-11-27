@@ -169,6 +169,8 @@ def main(args):
                                       betas=args.betas)
 
     criterion_constructor = getattr(loss, args.content_loss)
+    if args.loss == 'VGGLoss':
+        args.args_to_loss = True
     content_criterion = criterion_constructor(args) if args.args_to_loss else criterion_constructor()
     content_criterion = content_criterion.cuda() if args.cuda else content_criterion
 
