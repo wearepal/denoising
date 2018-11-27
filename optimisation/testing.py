@@ -5,7 +5,7 @@ from pathlib import Path
 import models
 import torch
 import torchvision.transforms.functional as F
-
+from utils.functions import apply_spectral_norm
 
 def test(args, sample_transform):
     model_path = Path(args.run_on_test[0]).resolve()
@@ -28,6 +28,7 @@ def test(args, sample_transform):
     print('==> Checkpoint loaded')
     model = getattr(models, model_args.generator)(args)
     model = model.cuda() if args.cuda else model
+    apply_spectral_norm(model)
     state_dict = checkpoint['model'] if 'model' in checkpoint else checkpoint['generator']
     model.load_state_dict(state_dict)
     model.eval()
