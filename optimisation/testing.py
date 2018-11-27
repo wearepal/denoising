@@ -28,7 +28,8 @@ def test(args, sample_transform):
     print('==> Checkpoint loaded')
     model = getattr(models, model_args.model)(args)
     model = model.cuda() if args.cuda else model
-    model.load_state_dict(checkpoint['model'])
+    state_dict = checkpoint['model'] if 'model' in checkpoint else checkpoint['generator']
+    model.load_state_dict(state_dict)
     model.eval()
 
     test_dataset = TestDataset(args.run_on_test[1], transform=sample_transform)
