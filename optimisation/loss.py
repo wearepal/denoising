@@ -7,7 +7,7 @@ from utils.functions import MeanShift
 
 class VGGLoss(nn.Module):
 
-    def __init__(self, args, rgb_range=2, prefactor=0.006):
+    def __init__(self, args, prefactor=0.006):
         super().__init__()
         vgg_features = torchvision.models.vgg19(pretrained=True).features
         modules = [m for m in vgg_features]
@@ -16,9 +16,6 @@ class VGGLoss(nn.Module):
         elif args.vgg_feature_layer == '54':
             self.vgg = nn.Sequential(*modules[:35])
 
-        # vgg_mean = (0.485, 0.456, 0.406)
-        # vgg_std = (0.229 * rgb_range, 0.224 * rgb_range, 0.225 * rgb_range)
-        # self.sub_mean = MeanShift(rgb_range, vgg_mean, vgg_std)
         self.vgg.requires_grad = False
         self.prefactor = prefactor
 
