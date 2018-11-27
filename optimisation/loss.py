@@ -16,15 +16,15 @@ class VGGLoss(nn.Module):
         elif args.vgg_feature_layer == '54':
             self.vgg = nn.Sequential(*modules[:35])
 
-        vgg_mean = (0.485, 0.456, 0.406)
-        vgg_std = (0.229 * rgb_range, 0.224 * rgb_range, 0.225 * rgb_range)
-        self.sub_mean = MeanShift(rgb_range, vgg_mean, vgg_std)
+        # vgg_mean = (0.485, 0.456, 0.406)
+        # vgg_std = (0.229 * rgb_range, 0.224 * rgb_range, 0.225 * rgb_range)
+        # self.sub_mean = MeanShift(rgb_range, vgg_mean, vgg_std)
         self.vgg.requires_grad = False
         self.prefactor = prefactor
 
     def forward(self, noisy, clean):
         def _forward(x):
-            x = self.sub_mean(x)
+            # x = self.sub_mean(x)
             x = self.vgg(x)
             return x
 
