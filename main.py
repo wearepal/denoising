@@ -46,8 +46,8 @@ def parse_arguments(raw_args=None):
                              ' (default: 32)')
 
     # training parameters
-    parser.add_argument('--epochs', default=100, type=int, metavar='N',
-                        help='number of total epochs to run (default: 100)')
+    parser.add_argument('--epochs', default=30, type=int, metavar='N',
+                        help='number of total epochs to run (default: 30)')
     parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
                         help='manual epoch number (useful on restarts)')
 
@@ -56,10 +56,8 @@ def parse_arguments(raw_args=None):
     parser.add_argument('-teb', '--test_batch_size', default=256, type=int,
                         metavar='N', help='mini-batch size for test data (default: 256)')
 
-    parser.add_argument('-lr', '--learning_rate', default=0.005, type=float,
+    parser.add_argument('-lr', '--learning_rate', default=0.001, type=float,
                         metavar='LR', help='initial learning rate (default: 0.005)')
-    parser.add_argument('--adv_weight', default=1e-3, type=float,
-                        metavar='W', help='weight on adversarial loss (default: 1e-3)')
 
     # model parameters
     parser.add_argument('--loss', type=str, default='MSELoss')
