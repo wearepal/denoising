@@ -3,5 +3,6 @@ from .ircnn import *
 from .simple_complex_cnn import *
 from .discriminator import *
 from .gated_resnet import *
+from .dense_cnn import *
 from . import layers
 from . import complex_layers
