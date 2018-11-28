@@ -25,7 +25,7 @@ class ResidualDenseBlock(nn.Module):
         #                        layer_activation=None)
 
         self.beta = beta
-        if learn_beta:
+        if learn_beta and local_condition:
             self.cond_beta = nn.Linear(1, gc)
         else:
             self.register_parameter('cond_beta', None)
@@ -59,7 +59,7 @@ class RDDB(nn.Module):
         self.RDB3 = ResidualDenseBlock(nc, gc, kernel_size, local_condition, learn_beta, beta)
 
         self.beta = beta
-        if learn_beta:
+        if learn_beta and local_condition:
             self.cond_beta = nn.Linear(1, gc)
         else:
             self.register_parameter('cond_beta', None)
