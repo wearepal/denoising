@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 from models import ConvLayer, GatedConvLayer
-from torchvision.models import vgg19
+
 
 class ResidualDenseBlock(nn.Module):
 
@@ -16,8 +16,6 @@ class ResidualDenseBlock(nn.Module):
                                layer_activation=nn.LeakyReLU(0.2))
         self.conv3 = ConvLayer(nc+2*gc, gc, kernel_size=kernel_size, normalize=False,
                                layer_activation=nn.LeakyReLU(0.2))
-        # self.conv4 = ConvLayer(nc+3*gc, gc, kernel_size=kernel_size, normalize=False,
-        #                        layer_activation=nn.LeakyReLU(0.2))
         self.gated_conv = GatedConvLayer(nc+3*gc, gc, kernel_size=kernel_size,
                                          local_condition=local_condition, conv_residual=False,
                                          normalize=False, layer_activation=None)
@@ -26,7 +24,6 @@ class ResidualDenseBlock(nn.Module):
         x1 = self.conv1(x)
         x2 = self.conv2(torch.cat((x, x1), 1))
         x3 = self.conv3(torch.cat((x, x1, x2), 1))
-        # x4 = self.conv4(torch.cat((x, x1, x2, x3), 1))
         out = self.gated_conv(torch.cat((x, x1, x2, x3), 1), c)
         return out.mul(self.beta) + x
 
@@ -87,4 +84,3 @@ class DenseGatedCNN(nn.Module):
             out = out + x
 
         return out
-
