@@ -43,7 +43,7 @@ class RDDB(nn.Module):
     def forward(self, x, c=None, class_labels=None):
         out = self.RDB1(x, c, class_labels)
         out = self.RDB2(out, c, class_labels)
-        out = self.RDB3(out)
+        out = self.RDB3(out, c, class_labels)
         return out.mul(self.beta) + x
 
 
