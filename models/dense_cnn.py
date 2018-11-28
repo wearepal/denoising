@@ -69,6 +69,7 @@ class DenseGatedCNN(nn.Module):
         def init_weights(m):
             if isinstance(m, nn.Conv2d):
                 m.weight.data *= 0.1
+                m.bias.data *= 0.1
         self.apply(init_weights)
 
         self.residual = not args.interpolate
