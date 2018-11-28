@@ -56,13 +56,20 @@ class DenseGatedCNN(nn.Module):
         super().__init__()
 
         # Input layer
-        layers = [GatedConvLayer(args.cnn_in_channels, 32, local_condition=args.iso)]
+        layers = [GatedConvLayer(args.cnn_in_channels, 32, local_condition=args.iso,
+                                 normalize=False, layer_activation=None)]
         # Hidden layers
         for _ in range(4):
             layers.append(RDDB(32, 32, local_condition=args.iso))
         # Output layer
         layers.append(ConvLayer(32, args.cnn_in_channels, normalize=False, layer_activation=None))
         self.model = nn.ModuleList(layers)
+
+        # init
+        def init_weights(m):
+            if isinstance(m, nn.Conv2d):
+                m.weight.data *= 0.1
+        self.apply(init_weights)
 
         self.residual = not args.interpolate
 
