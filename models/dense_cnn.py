@@ -18,10 +18,7 @@ class ResidualDenseBlock(nn.Module):
                                layer_activation=nn.LeakyReLU(0.2))
         self.conv4 = ConvLayer(nc+3*gc, gc, kernel_size=kernel_size, normalize=False,
                                layer_activation=nn.LeakyReLU(0.2))
-        self.gated_conv = GatedConvLayer(nc+4*gc, gc, kernel_size=kernel_size,
-                                         local_condition=local_condition, conv_residual=False,
-                                         normalize=False, layer_activation=None)
-        self.cond_conv = nn.Linear(1, 1)
+        self.cond_weight = nn.Linear(1, gc)
 
     def forward(self, x, c=None, class_labels=None):
         x1 = self.conv1(x)
@@ -29,7 +26,7 @@ class ResidualDenseBlock(nn.Module):
         x3 = self.conv3(torch.cat((x, x1, x2), 1))
         x4 = self.conv4(torch.cat((x, x1, x2, x3), 1))
         # out = self.gated_conv(torch.cat((x, x1, x2, x3, x4), 1), c)
-        return x4.mul(self.cond_conv(c).sigmoid()) + x
+        return x4.mul(self.cond_weight(c).sigmoid()) + x
 
 
 class RDDB(nn.Module):
