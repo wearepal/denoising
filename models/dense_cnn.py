@@ -21,14 +21,15 @@ class ResidualDenseBlock(nn.Module):
         self.gated_conv = GatedConvLayer(nc+4*gc, gc, kernel_size=kernel_size,
                                          local_condition=local_condition, conv_residual=False,
                                          normalize=False, layer_activation=None)
+        self.cond_conv = nn.Linear(1, 1)
 
     def forward(self, x, c=None, class_labels=None):
         x1 = self.conv1(x)
         x2 = self.conv2(torch.cat((x, x1), 1))
         x3 = self.conv3(torch.cat((x, x1, x2), 1))
         x4 = self.conv4(torch.cat((x, x1, x2, x3), 1))
-        out = self.gated_conv(torch.cat((x, x1, x2, x3, x4), 1), c)
-        return out.mul(self.beta) + x
+        # out = self.gated_conv(torch.cat((x, x1, x2, x3, x4), 1), c)
+        return x4.mul(self.cond_conv(c).sigmoid()) + x
 
 
 class RDDB(nn.Module):
