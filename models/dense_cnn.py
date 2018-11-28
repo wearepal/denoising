@@ -20,7 +20,7 @@ class ResidualDenseBlock(nn.Module):
                                layer_activation=nn.LeakyReLU(0.2))
 
         if learn_beta:
-            self.conv5 = ConvLayer(nc + 4 * gc, gc, kernel_size=kernel_size, normalize=False,
+            self.conv5 = ConvLayer(nc+4*gc, gc, kernel_size=kernel_size, normalize=False,
                                    layer_activation=None)
         else:
             self.conv5 = GatedConvLayer(nc+4*gc, gc, kernel_size=kernel_size,
