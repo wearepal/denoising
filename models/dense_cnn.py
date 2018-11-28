@@ -1,12 +1,12 @@
 import torch
 import torch.nn as nn
 
-from models import ConvLayer, GatedConvLayer
+from models import ConvLayer
 
 
 class ResidualDenseBlock(nn.Module):
 
-    def __init__(self, nc, gc=32, kernel_size=3, local_condition=True, beta=0.2):
+    def __init__(self, nc, gc=32, kernel_size=3, beta=0.2):
         super().__init__()
         self.beta = beta
 
@@ -20,7 +20,7 @@ class ResidualDenseBlock(nn.Module):
                                layer_activation=nn.LeakyReLU(0.2))
         self.conv5 = ConvLayer(nc+4*gc, gc, kernel_size=kernel_size, normalize=False,
                                layer_activation=None)
-        self.cond_beta = nn.Linear(1, 1)
+        self.cond_beta = nn.Linear(1, gc)
 
     def forward(self, x, c=None, class_labels=None):
         x1 = self.conv1(x)
@@ -28,7 +28,7 @@ class ResidualDenseBlock(nn.Module):
         x3 = self.conv3(torch.cat((x, x1, x2), 1))
         x4 = self.conv4(torch.cat((x, x1, x2, x3), 1))
         x5 = self.conv5(torch.cat((x, x1, x2, x3, x4), 1))
-        beta = self.cond_beta(c).sigmoid()
+        beta = self.cond_beta(c).sigmoid()[..., None][..., None]
         return x5.mul(beta) + x
 
 
@@ -43,12 +43,14 @@ class RDDB(nn.Module):
         self.RDB1 = ResidualDenseBlock(nc, gc, kernel_size, local_condition, beta)
         self.RDB2 = ResidualDenseBlock(nc, gc, kernel_size, local_condition, beta)
         self.RDB3 = ResidualDenseBlock(nc, gc, kernel_size, local_condition, beta)
+        self.cond_beta = nn.Linear(1, 1)
 
     def forward(self, x, c=None, class_labels=None):
         out = self.RDB1(x, c, class_labels)
         out = self.RDB2(out, c, class_labels)
         out = self.RDB3(out, c, class_labels)
-        return out.mul(self.beta) + x
+        beta = self.cond_beta(c).sigmoid()[..., None][..., None]
+        return out.mul(beta) + x
 
 
 class DenseGatedCNN(nn.Module):
