@@ -29,7 +29,7 @@ class ResidualDenseBlock(nn.Module):
 
         self.beta = beta
         if learn_beta and local_condition:
-            self.cond_beta = nn.Linear(1, 1)
+            self.cond_beta = nn.Linear(1, gc)
         else:
             self.register_parameter('cond_beta', None)
 
@@ -63,7 +63,7 @@ class RDDB(nn.Module):
 
         self.beta = beta
         if learn_beta and local_condition:
-            self.cond_beta = nn.Linear(1, 1)
+            self.cond_beta = nn.Linear(1, gc)
         else:
             self.register_parameter('cond_beta', None)
 
