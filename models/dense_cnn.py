@@ -57,7 +57,7 @@ class DenseGatedCNN(nn.Module):
 
         # Input layer
         layers = [GatedConvLayer(args.cnn_in_channels, 32, local_condition=args.iso,
-                                 normalize=False, layer_activation=None)]
+                                 normalize=False, layer_activation=nn.LeakyReLU(0.2))]
         # Hidden layers
         for _ in range(4):
             layers.append(RDDB(32, 32, local_condition=args.iso))
