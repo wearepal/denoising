@@ -41,7 +41,7 @@ class ResidualDenseBlock(nn.Module):
         x5 = self.conv5(torch.cat((x, x1, x2, x3, x4), 1), c)
 
         if self.cond_beta is not None:
-            beta = self.cond_beta(c.view(-1, 1)).sigmoid()[..., None][..., None]
+            beta = self.cond_beta(c.view(-1, 1))[..., None][..., None]
         else:
             beta = self.beta
 
