@@ -6,7 +6,7 @@ from models import ConvLayer
 
 class ResidualDenseBlock(nn.Module):
 
-    def __init__(self, nc, gc=32, kernel_size=3, beta=0.2):
+    def __init__(self, nc, gc=32, kernel_size=3, local_condition=True, beta=0.2):
         super().__init__()
         self.beta = beta
 
