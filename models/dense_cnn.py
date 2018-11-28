@@ -102,7 +102,6 @@ class DenseGatedCNN(nn.Module):
         def init_weights(m):
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight)
-                m.weight.data *= 0.1
             elif isinstance(m, nn.Linear):
                 m.weight.data *= 0.1
 
