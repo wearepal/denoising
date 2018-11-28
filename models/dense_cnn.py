@@ -28,7 +28,7 @@ class ResidualDenseBlock(nn.Module):
         x3 = self.conv3(torch.cat((x, x1, x2), 1))
         x4 = self.conv4(torch.cat((x, x1, x2, x3), 1))
         x5 = self.conv5(torch.cat((x, x1, x2, x3, x4), 1))
-        beta = self.cond_beta(c).sigmoid()[..., None][..., None]
+        beta = self.cond_beta(c.view(-1, 1)).sigmoid()[..., None][..., None]
         return x5.mul(beta) + x
 
 
@@ -49,7 +49,7 @@ class RDDB(nn.Module):
         out = self.RDB1(x, c, class_labels)
         out = self.RDB2(out, c, class_labels)
         out = self.RDB3(out, c, class_labels)
-        beta = self.cond_beta(c).sigmoid()[..., None][..., None]
+        beta = self.cond_beta(c.view(-1, 1)).sigmoid()[..., None][..., None]
         return out.mul(beta) + x
 
 
