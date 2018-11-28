@@ -20,7 +20,7 @@ class ResidualDenseBlock(nn.Module):
                                layer_activation=nn.LeakyReLU(0.2))
         self.conv5 = ConvLayer(nc+4*gc, gc, kernel_size=kernel_size, normalize=False,
                                layer_activation=None)
-        self.cond_beta = nn.Linear(1, gc)
+        self.cond_beta = nn.Linear(1, 1)
 
     def forward(self, x, c=None, class_labels=None):
         x1 = self.conv1(x)
