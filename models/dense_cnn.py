@@ -27,6 +27,8 @@ class ResidualDenseBlock(nn.Module):
         self.beta = beta
         if learn_beta:
             self.cond_beta = nn.Linear(1, gc)
+        else:
+            self.register_parameter('cond_beta', None)
 
     def forward(self, x, c=None, class_labels=None):
         x1 = self.conv1(x, c)
@@ -59,6 +61,8 @@ class RDDB(nn.Module):
         self.beta = beta
         if learn_beta:
             self.cond_beta = nn.Linear(1, gc)
+        else:
+            self.register_parameter('cond_beta', None)
 
     def forward(self, x, c=None, class_labels=None):
         out = self.RDB1(x, c, class_labels)
