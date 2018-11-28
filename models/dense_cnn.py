@@ -100,7 +100,7 @@ class DenseGatedCNN(nn.Module):
 
         # init
         def init_weights(m):
-            if isinstance(m, nn.Conv2d):
+            if isinstance(m, (nn.Conv2d, nn.Linear)):
                 m.weight.data *= 0.1
 
         self.apply(init_weights)
