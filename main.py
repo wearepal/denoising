@@ -79,8 +79,8 @@ def parse_arguments(raw_args=None):
     # CNN
     parser.add_argument('--cnn_in_channels', type=int, default=3)
     parser.add_argument('--cnn_hidden_channels', type=int, default=32)
-    parser.add_argument('--cnn_hidden_layers', type=int, default=7)
-    parser.add_argument('--learn_beta', action='store_true', default=False,
+    parser.add_argument('--cnn_hidden_layers', type=int, default=4)
+    parser.add_argument('--learn_beta', action='store_true', default=True,
                         help='whether to learn residual scaling values in dense model')
     parser.add_argument('--interpolate', action='store_true', default=False,
                         help='interpolate rather than learn noise as an image residual')
