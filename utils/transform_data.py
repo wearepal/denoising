@@ -5,7 +5,7 @@ from random import seed
 from torchvision import transforms
 F = transforms.functional
 from tqdm import tqdm
-from utils.loader import HuaweiDataset
+from .loader import HuaweiDataset
 import argparse
 
 IMAGE_HEIGHT = 3968
