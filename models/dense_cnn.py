@@ -20,16 +20,16 @@ class ResidualDenseBlock(nn.Module):
                                layer_activation=nn.LeakyReLU(0.2))
 
         if learn_beta:
-            self.conv5 = ConvLayer(nc+4*gc, gc, kernel_size=kernel_size, normalize=False,
+            self.conv5 = ConvLayer(nc+4*gc, nc, kernel_size=kernel_size, normalize=False,
                                    layer_activation=None)
         else:
-            self.conv5 = GatedConvLayer(nc+4*gc, gc, kernel_size=kernel_size,
+            self.conv5 = GatedConvLayer(nc+4*gc, nc, kernel_size=kernel_size,
                                         local_condition=local_condition, conv_residual=False,
                                         normalize=False, layer_activation=None)
 
         self.beta = beta
         if learn_beta and local_condition:
-            self.cond_beta = nn.Linear(1, gc, bias=False)
+            self.cond_beta = nn.Linear(1, nc, bias=False)
         else:
             self.register_parameter('cond_beta', None)
 
@@ -63,7 +63,7 @@ class RDDB(nn.Module):
 
         self.beta = beta
         if learn_beta and local_condition:
-            self.cond_beta = nn.Linear(1, gc, bias=False)
+            self.cond_beta = nn.Linear(1, nc, bias=False)
         else:
             self.register_parameter('cond_beta', None)
 
@@ -87,15 +87,15 @@ class DenseGatedCNN(nn.Module):
     """
     def __init__(self, args):
         super().__init__()
-
+        gc = 32
         # Input layer
-        layers = [ConvLayer(args.cnn_in_channels, 32, normalize=False, layer_activation=None)]
+        layers = [ConvLayer(args.cnn_in_channels, args.cnn_hidden_channels, normalize=False, layer_activation=None)]
 
         # Hidden layers
         for _ in range(args.cnn_hidden_layers):
-            layers.append(RDDB(32, 32, local_condition=args.iso, learn_beta=args.learn_beta, beta=0.2))
+            layers.append(RDDB(args.cnn_hidden_channels, gc, local_condition=args.iso, learn_beta=args.learn_beta, beta=0.2))
         # Output layer
-        layers.append(ConvLayer(32, args.cnn_in_channels, normalize=False, layer_activation=None))
+        layers.append(ConvLayer(args.cnn_hidden_channels, args.cnn_in_channels, normalize=False, layer_activation=None))
         self.model = nn.ModuleList(layers)
 
         # init
