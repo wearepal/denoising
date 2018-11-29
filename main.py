@@ -73,6 +73,8 @@ def parse_arguments(raw_args=None):
     # gpu/cpu
     parser.add_argument('--gpu_num', type=int, default=0, metavar='GPU',
                         help='choose GPU to run on.')
+    parser.add_argument('--multi-gpu', action='store_true', default=False,
+                        help='train the model on multiple GPUs in parallel')
 
     # CNN
     parser.add_argument('--cnn_in_channels', type=int, default=3)
@@ -137,6 +139,8 @@ def main(args):
     # construct network from args
     model = getattr(models, args.model)(args)
     model = model.cuda() if args.cuda else model
+    if args.multi_gpu and torch.cuda.device_count() > 1:    # multiprocessing
+        model = torch.nn.DataParallel(model)
     optimizer = getattr(torch.optim, args.optim)(model.parameters(), lr=args.learning_rate)
     criterion_constructor = getattr(loss, args.loss)
     criterion = criterion_constructor(args) if args.args_to_loss else criterion_constructor()
