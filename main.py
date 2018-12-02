@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from tensorboardX import SummaryWriter
 
 from optimisation.testing import test
-from optimisation.training import train, validate, evaluate_psnr_and_vgg_loss
+from optimisation.training import train, validate, evaluate
 from optimisation import loss
 from utils import TransformedHuaweiDataset, transform_sample, parse_arguments
 import models
@@ -79,7 +79,7 @@ def main(args):
 
     if args.evaluate:
         # Evaluate model using PSNR and SSIM metrics
-        evaluate_psnr_and_vgg_loss(args, model, val_loader)
+        evaluate(args, model, val_loader)
         return
 
     for epoch in range(args.start_epoch, args.epochs):
@@ -107,7 +107,7 @@ def main(args):
         save_checkpoint(checkpoint, model_filename, is_best, save_path)
 
     # Evaluate model using PSNR and SSIM metrics
-    evaluate_psnr_and_vgg_loss(args, model, val_loader)
+    evaluate(args, model, val_loader)
 
 
 def save_checkpoint(checkpoint, filename, is_best, save_path):

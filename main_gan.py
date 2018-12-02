@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 from tensorboardX import SummaryWriter
 
 from optimisation.testing import test
-from optimisation.training import train, train_gan, validate, evaluate_psnr_and_vgg_loss
+from optimisation.training import train, train_gan, validate, evaluate
 from optimisation import loss
 from utils import TransformedHuaweiDataset, transform_sample
 from utils.functions import apply_spectral_norm
@@ -194,14 +194,14 @@ def main(args):
         if checkpoint is not None:
             args.start_epoch = checkpoint['epoch'] + 1
             best_loss = checkpoint['best_loss']
-            generator.load_state_dict(checkpoint['generator'])
+            generator.load_state_dict(checkpoint['model'])
             discriminator.load_state_dict(checkpoint['discriminator'])
             gen_optimizer.load_state_dict(checkpoint['gen_optimizer'])
             disc_optimizer.load_state_dict(checkpoint['disc_optimizer'])
 
     if args.evaluate:
         # Evaluate model using PSNR and SSIM metrics
-        evaluate_psnr_and_vgg_loss(args, generator, val_loader)
+        evaluate(args, generator, val_loader)
         return
 
     # pre-train generator
@@ -230,7 +230,7 @@ def main(args):
         model_filename = 'checkpoint_%03d.pth.tar' % epoch
         checkpoint = {
             'epoch': epoch,
-            'generator': generator.state_dict(),
+            'model': generator.state_dict(),
             'discriminator': discriminator.state_dict(),
             'gen_optimizer': gen_optimizer.state_dict(),
             'disc_optimizer': disc_optimizer.state_dict(),
@@ -239,7 +239,7 @@ def main(args):
         save_checkpoint(checkpoint, model_filename, is_best, save_path)
 
     # Evaluate model using PSNR and SSIM metrics
-    evaluate_psnr_and_vgg_loss(args, generator, val_loader)
+    evaluate(args, generator, val_loader)
 
 
 def save_checkpoint(checkpoint, filename, is_best, save_path):

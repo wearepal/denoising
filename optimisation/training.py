@@ -242,7 +242,7 @@ def log_images(noisy_image, denoised_image, clean_image,
                                                         scale_each=True), training_iters)
 
 
-def evaluate_psnr_and_vgg_loss(args, model, data_loader):
+def evaluate(args, model, data_loader):
     # Average meters
     batch_time_meter = AverageValueMeter()
     psnr_meter = AverageValueMeter()
