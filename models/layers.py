@@ -4,15 +4,6 @@ import torch
 import torch.nn as nn
 
 
-class Identity(nn.Module):
-
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, x):
-        return x
-
-
 def norm(num_channels, num_norm_groups, num_classes=0):
 
     if num_classes > 1:
@@ -314,61 +305,6 @@ class ResidualBLock(nn.Module):
         out = self.relu(out)
 
         out = self.conv2(out)
-        out = self.norm2(out, class_labels) if self.conditional_norm else self.norm2(out)
-
-        if self.residual:
-            if self.downsample is not None:
-                residual = self.downsample(residual)
-            out += residual
-
-        out = self.relu(out)
-
-        return out
-
-
-class GatedResidualBLock(nn.Module):
-
-    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1,
-                 dilation=(1, 1), residual=True, activation=None, local_condition=False,
-                 block_residual=True, num_norm_groups=0, num_classes=0):
-        super().__init__()
-
-        if isinstance(dilation, int):   # use the same dilation factor for both convolutions
-            dilation = (dilation, dilation)
-
-        conv1_padding = padding * dilation[0]    # ensure the dilation does not affect the output size
-        self.conv1 = GatedConv2d(in_channels, out_channels, kernel_size=kernel_size, stride=stride,
-                                 padding=conv1_padding, dilation=dilation[0], activation=activation,
-                                 local_condition=local_condition, residual=block_residual)
-        self.norm1 = norm(out_channels, num_norm_groups, num_classes)
-
-        conv2_padding = padding * dilation[1]
-        self.conv2 = GatedConv2d(out_channels, out_channels, kernel_size=kernel_size, stride=stride,
-                                 padding=conv2_padding, dilation=dilation[1], activation=activation,
-                                 local_condition=local_condition, residual=block_residual)
-        self.norm2 = norm(out_channels, num_norm_groups, num_classes)
-
-        self.relu = nn.ReLU()
-
-        self.downsample = None
-        if stride != 1 or in_channels != out_channels:
-            self.downsample = nn.Sequential(
-                nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride),
-                norm(num_norm_groups, out_channels)
-            )
-
-        self.stride = stride
-        self.residual = residual
-        self.conditional_norm = num_classes > 1
-
-    def forward(self, x, c=None, class_labels=None):
-        residual = x
-
-        out = self.conv1(x, c)
-        out = self.norm1(out, class_labels) if self.conditional_norm else self.norm1(out)
-        out = self.relu(out)
-
-        out = self.conv2(out, c)
         out = self.norm2(out, class_labels) if self.conditional_norm else self.norm2(out)
 
         if self.residual:

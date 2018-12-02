@@ -77,7 +77,7 @@ def parse_arguments(raw_args=None):
                         help='weight to place on adversarial loss (default: 1e-3)')
 
     # model parameters
-    parser.add_argument('-gen', '--generator', type=str, default='SimpleGatedCNN',
+    parser.add_argument('-gen', '--generator', type=str, default='GatedCNN',
                         help='model to use as the generator')
     parser.add_argument('-disc', '--discriminator', type=str, default='SimpleDiscriminator',
                         help='model to use as the discriminator')
@@ -107,8 +107,8 @@ def parse_arguments(raw_args=None):
                         help='use the class information of images')
 
     # VGG loss
-    parser.add_argument('--vgg_feature_layer', type=int, default=11,
-                        help='VGG19 layer number from which to extract features')
+    parser.add_argument('--vgg_feature_layer', type=str, default='22',
+                        choices=('22', '54'), help='VGG19 layer number from which to extract features')
 
     args = parser.parse_args(raw_args)
     args.cuda = not args.no_cuda and torch.cuda.is_available()
