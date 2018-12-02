@@ -42,7 +42,7 @@ def parse_arguments(raw_args=None):
     parser.add_argument('-sd', '--save_dir', type=str, metavar='PATH', default='',
                         help='path to save results and checkpoints to '
                              '(default: ../results/<model>/<current timestamp>)')
-    parser.add_argument('--num-samples-to-log', type=int, metavar='N', default=32,
+    parser.add_argument('--num_samples_to_log', type=int, metavar='N', default=32,
                         help='number of image samples to write to tensorboard each epoch'
                              ' (default: 32)')
 
