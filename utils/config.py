@@ -92,7 +92,7 @@ def parse_arguments(config_file):
 
     # VGG loss
     vgg_config = parser['VGG']
-    args.set_int(vgg_config, 'vgg_feature_layer')
+    args.set_str(vgg_config, 'vgg_feature_layer')
 
     args.num_classes = 3 if args.use_class else 0
 

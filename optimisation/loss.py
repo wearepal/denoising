@@ -20,34 +20,36 @@ class VGGLoss(nn.Module):
     the euclidean distance between the feature representations
      of a reconstructed image.
     """
-    feature_layer_default = 11  # VGG19 layer number from which to extract features
+    vgg_feature_layer_default = '22'  # VGG19 layer number from which to extract features
 
     def __init__(self, args=None, prefactor=0.006):
-        """
-        Args:
-            prefactor: prefactor by which to scale the loss.
-            Rescaling by a factor of 1 / 12.75 gives VGG losses of a scale that
-            is comparable to MSE loss. This is equivalent to multiplying with a
-            rescaling factor of ≈ 0.006.
-        """
         super().__init__()
-        vgg = torchvision.models.vgg19(pretrained=True)
-        self.criterion = nn.MSELoss()
-        feature_layer = self.feature_layer_default if args is None else args.vgg_feature_layer
-        self.feature_extractor = _FeatureExtractor(vgg, feature_layer=feature_layer)
+        vgg_features = torchvision.models.vgg19(pretrained=True).features
+        modules = [m for m in vgg_features]
+
+        vgg_feature_layer = self.feature_layer_default if args is None else args.vgg_feature_layer
+        if vgg_feature_layer == '22':
+            self.vgg = nn.Sequential(*modules[:8])
+        elif vgg_feature_layer == '54':
+            self.vgg = nn.Sequential(*modules[:35])
+        else:
+            raise ValueError("'vgg_feature_layer' has to be either 22 or 54")
+
+        self.vgg.requires_grad = False
         self.prefactor = prefactor
 
-    def forward(self, fake, real):
-        """
-        Args:
-            fake: Fake samples produced by the generator
-            real: Real (ground-truth) samples
-        Returns:
-            VGG loss
-        """
-        real_features = self.feature_extractor(real).detach()
-        fake_features = self.feature_extractor(fake)
-        return self.prefactor * self.criterion(fake_features, real_features)
+    def forward(self, noisy, clean):
+        def _forward(x):
+            x = self.vgg(x)
+            return x
+
+        vgg_noisy = _forward(noisy)
+        with torch.no_grad():
+            vgg_clean = _forward(clean.detach())
+
+        loss = self.prefactor * F.mse_loss(vgg_noisy, vgg_clean)
+
+        return loss
 
 
 class WassersteinLossGAN(nn.Module):
