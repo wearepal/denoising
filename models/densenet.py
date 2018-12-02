@@ -52,7 +52,6 @@ class RDDB(nn.Module):
     """
     Residual in Residual Dense Block
     """
-
     def __init__(self, nc, gc=32, kernel_size=3, local_condition=True,
                  learn_beta=False, beta=0.2):
         super().__init__()
