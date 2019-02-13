@@ -26,6 +26,8 @@ class Settings:
     def __set(self, name, value):
         self._key_list.append(name)
         self.__setattr__(name, value)
+        if value is None:
+            print(f"Warning: no value specified for \"{name}\" (set to None).")
 
     def to_dict(self):
         """Convert this settings object to a dictionary"""
