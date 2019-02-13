@@ -38,6 +38,10 @@ class Settings:
 
 
 def parse_arguments(config_file):
+    """
+    This function basically just checks if all config values are there
+    and if they have the right type.
+    """
     args = Settings()
     parser = configparser.ConfigParser()
     parser.read(config_file)
