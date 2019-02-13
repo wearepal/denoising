@@ -28,7 +28,7 @@ class ComplexGatedCNN(nn.Module):
 
         self.model = nn.ModuleList(layers)
 
-        self.residual = not args.interpolate
+        self.residual = args.residual
 
     def forward(self, x, c=None, class_labels=None):
         out = torch.rfft(x, signal_ndim=2)

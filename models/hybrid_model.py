@@ -45,7 +45,7 @@ class HybridGatedCNN(nn.Module):
         self.real_stream = nn.ModuleList(real_layers)
         self.complex_stream = nn.ModuleList(complex_layers)
 
-        self.residual = not args.interpolate
+        self.residual = args.residual
 
     def forward(self, x, c=None, class_labels=None):
 

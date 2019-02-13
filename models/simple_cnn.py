@@ -25,7 +25,7 @@ class SimpleCNN(nn.Module):
         # Output layer
 
         self.model = nn.Sequential(*layers)
-        self.residual = not args.interpolate
+        self.residual = args.residual
 
     def forward(self, x, c=None, class_labels=None):
         out = self.model(x)
@@ -57,7 +57,7 @@ class SimpleGatedCNN(nn.Module):
                                      normalize=False, layer_activation=None))
         self.model = nn.ModuleList(layers)
 
-        self.residual = not args.interpolate
+        self.residual = args.residual
 
     def forward(self, x, c=None, class_labels=None):
         out = x
