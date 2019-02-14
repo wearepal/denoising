@@ -106,6 +106,7 @@ def parse_arguments(config_file):
     # gpu/cpu
     gpu_config = get_section(parser, 'GPU')
     args.set_int(gpu_config, 'gpu_num')
+    args.set_bool(gpu_config, 'multi_gpu')
 
     # CNN
     cnn_config = get_section(parser, 'CNN')
@@ -115,6 +116,7 @@ def parse_arguments(config_file):
     args.set_bool(cnn_config, 'residual')
     args.set_bool(cnn_config, 'iso')
     args.set_bool(cnn_config, 'use_class')
+    args.set_bool(cnn_config, 'learn_beta')
 
     # VGG loss
     vgg_config = get_section(parser, 'VGG')
