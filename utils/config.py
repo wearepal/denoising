@@ -1,5 +1,6 @@
 """Configuration loading and parsing"""
 import configparser
+import torch
 
 
 class Settings:
@@ -120,6 +121,7 @@ def parse_arguments(config_file):
     args.set_str(vgg_config, 'vgg_feature_layer')
 
     args.num_classes = 3 if args.use_class else 0
+    args.cuda = args.cuda and torch.cuda.is_available()
 
     if args.random_seed:
         args.seed = random.randint(1, 100000)
