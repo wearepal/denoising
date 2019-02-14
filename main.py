@@ -22,7 +22,7 @@ def main(args):
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
     torch.cuda.manual_seed_all(args.seed)
-    if args.cuda:
+    if args.cuda and not args.multi_gpu:
         # gpu device number
         torch.cuda.set_device(args.gpu_num)
 
@@ -50,6 +50,8 @@ def main(args):
     # construct network from args
     model = getattr(models, args.model)(args)
     model = model.cuda() if args.cuda else model
+    if args.multi_gpu and torch.cuda.device_count() > 1:  # multiprocessing
+        model = torch.nn.DataParallel(model, device_ids=[0, 1])
     optimizer = getattr(torch.optim, args.optim)(model.parameters(), lr=args.learning_rate)
     criterion_constructor = getattr(loss, args.loss)
     criterion = criterion_constructor(args) if args.args_to_loss else criterion_constructor()
