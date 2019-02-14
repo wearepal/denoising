@@ -23,6 +23,13 @@ class VGGLoss(nn.Module):
     vgg_feature_layer_default = '22'  # VGG19 layer number from which to extract features
 
     def __init__(self, args=None, prefactor=0.006):
+        """
+        Args:
+            prefactor: prefactor by which to scale the loss.
+                       Rescaling by a factor of 1 / 12.75 gives VGG losses of a scale that
+                       is comparable to MSE loss. This is equivalent to multiplying with a
+                       rescaling factor of ≈ 0.006.
+        """
         super().__init__()
         vgg_features = torchvision.models.vgg19(pretrained=True).features
         modules = [m for m in vgg_features]
