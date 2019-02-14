@@ -40,7 +40,7 @@ def main(args):
 
     kwargs = {'pin_memory': True} if args.cuda else {}
 
-    print('\nMODEL SETTINGS: \n', args.to_dict(), '\n')
+    print('\nMODEL SETTINGS: \n', args.state_dict(), '\n')
     print("Random Seed: ", args.seed)
 
     # Save config
