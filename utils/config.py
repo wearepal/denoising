@@ -77,7 +77,8 @@ class Settings:
         You should always use this method to set a value instead of using __setattr__ directly,
         because otherwise the dictionary representation returned by state_dict won't contain it.
         """
-        self._key_list.append(key)
+        if key not in self._key_list:
+            self._key_list.append(key)
         self.__setattr__(key, value)
 
     def state_dict(self):
@@ -161,7 +162,7 @@ def parse_arguments(config_file):
     args.get_section('vgg').set_str('vgg_feature_layer')
 
     args.set('num_classes', 3 if args.use_class else 0)
-    args.set('cuda', args.cuda and torch.cuda.is_available())
+    args.cuda = args.cuda and torch.cuda.is_available()
 
     if args.random_seed:
         args.set('seed', random.randint(1, 100000))
