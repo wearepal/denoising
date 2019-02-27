@@ -87,7 +87,7 @@ class Settings:
     def load_state_dict(self, dictionary):
         """Load settings from a dictionary"""
         for key, value in dictionary.iter():
-            self.__setattr__(key, value)
+            self.set(key, value)
 
 
 def parse_arguments(config_file):
