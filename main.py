@@ -8,7 +8,7 @@ import time
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
-from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 from optimisation.testing import test
 from optimisation.training import train, validate, evaluate
@@ -40,7 +40,7 @@ def main(args):
 
     kwargs = {'pin_memory': True} if args.cuda else {}
 
-    print('\nMODEL SETTINGS: \n', args.state_dict(), '\n')
+    print('\nMODEL SETTINGS: \n', args.asdict(), '\n')
     print("Random Seed: ", args.seed)
 
     # Save config
@@ -123,4 +123,4 @@ def save_checkpoint(checkpoint, filename, is_best, save_path):
 
 
 if __name__ == '__main__':
-    main(parse_arguments(argv[1] if len(argv) >= 2 else "run_configs/default.ini"))
+    main(parse_arguments(argv[1] if len(argv) >= 2 else "run_configs/default.yaml"))

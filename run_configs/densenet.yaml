@@ -1,0 +1,32 @@
+data_dir: ../data/transformed
+test_split: 0.2
+data_subset: 1.0
+workers: 4
+cuda: true
+random_seed: false
+save_dir: 
+num_samples_to_log: 32
+evaluate: false
+
+epochs: 5
+start_epoch: 0
+train_batch_size: 32
+test_batch_size: 32
+learning_rate: 0.0001
+
+loss: MSELoss
+args_to_loss: false
+
+model: DenseGatedCNN
+optim: Adam
+
+gpu_num: 0
+multi_gpu: false
+
+cnn_in_channels: 3
+cnn_hidden_channels: 64
+cnn_hidden_layers: 4
+residual: true
+iso: true
+use_class: false
+learn_beta: true

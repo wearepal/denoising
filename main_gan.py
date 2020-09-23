@@ -41,7 +41,7 @@ def main(args):
 
     kwargs = {'pin_memory': True} if args.cuda else {}
 
-    print('\nMODEL SETTINGS: \n', args.state_dict(), '\n')
+    print('\nMODEL SETTINGS: \n', args.asdict(), '\n')
     print("Random Seed: ", args.seed)
 
     # Save config
@@ -148,4 +148,4 @@ def save_checkpoint(checkpoint, filename, is_best, save_path):
 
 
 if __name__ == '__main__':
-    main(parse_arguments(argv[1] if len(argv) >= 2 else "run_configs/default_gan.ini"))
+    main(parse_arguments(argv[1] if len(argv) >= 2 else "run_configs/default_gan.yaml"))

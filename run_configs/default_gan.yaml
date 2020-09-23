@@ -1,84 +1,76 @@
-[general]
 # location of transformed data
-data_dir=../data/transformed
+data_dir: ../data/transformed
 # Fraction of data to be used for validation
-test_split=0.2
+test_split: 0.2
 # Fraction of crops per image to be used
-data_subset=1.0
+data_subset: 1.0
 # number of data loading workers
-workers=4
+workers: 4
 # enables CUDA training
-cuda=True
+cuda: true
 # use random seed other than 42
-random_seed=False
+random_seed: false
 # path to save results and checkpoints to
 # (default: ../results/<model>/<current timestamp>)
-save_dir=
+save_dir: null
 # number of image samples to write to tensorboard each epoch
-num_samples_to_log=32
+num_samples_to_log: 32
 # test data path; if this is specified, the model will be evaluated on this data
-test_data_dir=
+test_data_dir: null
 # save path for denoised images
-results_dir=
+results_dir: null
 # load from a path to a saved checkpoint
-resume=
+resume: null
 # evaluate model on validation set
-evaluate=False
+evaluate: false
 
-[training]
 # number of total epochs to run
-epochs=30
+epochs: 30
 # number of epochs to pre-train the generator for
-pretrain_epochs=0
+pretrain_epochs: 0
 # manual epoch number (useful on restarts)
-start_epoch=0
+start_epoch: 0
 # mini-batch size for training data
-train_batch_size=256
+train_batch_size: 256
 # mini-batch size for test data
-test_batch_size=256
+test_batch_size: 256
 
-[optimization]
 # beta values for Adam optimizer
-beta1=0
-beta2=0.9
+beta1: 0
+beta2: 0.9
 # initial learning rate for generator
-gen_learning_rate=1e-4
+gen_learning_rate: 1.0e-4
 # initial learning rate for discriminator
-disc_learning_rate=4e-4
+disc_learning_rate: 4.0e-4
 # number of discriminator steps per generator step
-disc_iters=1
+disc_iters: 1
 
-[loss]
 # content loss for the generator
-content_loss=MSELoss
+content_loss: MSELoss
 # adversarial loss
-adv_loss=HingeLossGAN
+adv_loss: HingeLossGAN
 # weight to place on adversarial loss
-adv_weight=1e-3
+adv_weight: 1.0e-3
 # whether to pass the commandline arguments to the loss function
-args_to_loss=False
+args_to_loss: false
 
-[model]
 # model to use as the generator
-generator=GatedCNN
+generator: GatedCNN
 # model to use as the discriminator
-discriminator=SimpleDiscriminator
+discriminator: SimpleDiscriminator
 
-[GPU]
 # choose GPU to run on.
-gpu_num=0
+gpu_num: 0
 
-[CNN]
-cnn_in_channels=3
-cnn_hidden_channels=32
-cnn_hidden_layers=7
+cnn_in_channels: 3
+cnn_hidden_channels: 32
+cnn_hidden_layers: 7
 # learn noise as an image residual
-residual=True
+residual: true
 # not to use image ISO values as extra conditioning data
-iso=True
+iso: true
 # use the class information of images
-use_class=False
+use_class: false
 
-[VGG]
 # VGG19 layer number from which to extract features (allowed values: 22 and 54)
-vgg_feature_layer=22
+vgg_feature_layer: 22

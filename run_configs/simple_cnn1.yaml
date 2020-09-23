@@ -1,0 +1,29 @@
+data_dir: null
+test_split: 0.2
+data_subset: 0.01
+workers: 4
+cuda: true
+random_seed: false
+num_samples_to_log: 32
+evaluate: false
+
+epochs: 10
+start_epoch: 0
+train_batch_size: 256
+test_batch_size: 256
+learning_rate: 0.005
+
+loss: MSELoss
+args_to_loss: false
+
+model: SimpleCNN
+optim: Adam
+
+gpu_num: 0
+
+cnn_in_channels: 3
+cnn_hidden_channels: 32
+cnn_hidden_layers: 7
+residual: true
+iso: true
+use_class: false
