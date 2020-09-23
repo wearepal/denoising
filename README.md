@@ -22,7 +22,7 @@ Running the regular one:
 python main.py [path to config file]
 ```
 
-If no config file is specified, the default config file in `run_configs/default.ini`
+If no config file is specified, the default config file in `run_configs/default.yaml`
 is used.
 
 for GAN:
@@ -31,7 +31,7 @@ for GAN:
 python main_gan.py [path to config file]
 ```
 
-The default config file for the GAN architecture is `run_configs/default_gan.ini`.
+The default config file for the GAN architecture is `run_configs/default_gan.yaml`.
 
 If you want to use your own configuration, modify the config for the relevant
 model in a duplicate config file. Explanations of the various parameters are provided in the
